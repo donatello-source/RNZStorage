@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  php:
+    image: php:8.2-fpm
+    container_name: symfony_php
+    volumes:
+      - ./symfony:/var/www/symfony
+    networks:
+      - symfony_network
+    environment:
+      - APP_ENV=dev
+      - DATABASE_URL=pgsql://symfony:symfony@db:5432/symfony
+    depends_on:
+      - db
+
+  nginx:
+    image: nginx:alpine
+    container_name: symfony_nginx
+    volumes:
+      - ./symfony:/var/www/symfony
+      - ./docker/nginx-symfony.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      - "8080:80"
+      - "443:443"
+    depends_on:
+      - php
+    networks:
+      - symfony_network
+
+  db:
+    image: postgres:13
+    container_name: symfony_postgres
+    environment:
+      POSTGRES_USER: symfony
+      POSTGRES_PASSWORD: symfony
+      POSTGRES_DB: symfony
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - symfony_network
+
+  react:
+    image: node:16
+    container_name: react_frontend
+    working_dir: /app
+    volumes:
+      - ./react:/app
+    command: ["npm", "start"]
+    ports:
+      - "3000:3000"
+    networks:
+      - symfony_network
+
+  nginx-react:
+    image: nginx:alpine
+    container_name: react_nginx
+    volumes:
+      - ./react/build:/usr/share/nginx/html
+      - ./docker/nginx-react.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      - "80:80"
+    depends_on:
+      - react
+    networks:
+      - symfony_network
+
+networks:
+  symfony_network:
+    driver: bridge
+
+volumes:
+  db_data:
