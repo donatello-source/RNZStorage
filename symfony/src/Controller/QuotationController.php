@@ -27,13 +27,13 @@ final class QuotationController extends AbstractController
     #[Route('/api/quotation', name: 'get_quotation', methods: ['GET'])]
     public function getQuotation(): JsonResponse
     {
-        return $this->json($this->quotation);
+        return $this->json($this->quotation, 200);
     }
 
     #[Route('/api/quotation/equipment', name: 'get_quotation_equipment', methods: ['GET'])]
     public function getQuotationEquipment(): JsonResponse
     {
-        return $this->json($this->quotation['sprzet']);
+        return $this->json($this->quotation['sprzet'], 200);
     }
 
     #[Route('/api/quotation/equipment/{id}', name: 'get_quotation_equipment_by_id', methods: ['GET'])]
@@ -41,7 +41,7 @@ final class QuotationController extends AbstractController
     {
         foreach ($this->quotation['sprzet'] as $item) {
             if ($item['id'] === $id) {
-                return $this->json($item);
+                return $this->json($item, 200);
             }
         }
         return $this->json(['error' => 'Item not found in quotation'], 404);

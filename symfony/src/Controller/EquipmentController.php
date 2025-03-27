@@ -36,7 +36,7 @@ class EquipmentController extends AbstractController
     {
         foreach ($this->equipment as $item) {
             if ($item['id'] === $id) {
-                return $this->json($item);
+                return $this->json($item, 200);
             }
         }
         return $this->json(['error' => 'Item not found'], 404);
@@ -47,7 +47,7 @@ class EquipmentController extends AbstractController
     {
         $filtered = array_filter($this->equipment, fn($item) => strtolower($item['kategoria']) === strtolower($category));
 
-        return $this->json(array_values($filtered));
+        return $this->json(array_values($filtered), 200);
     }
 
     #[Route('/api/equipment', name: 'add_equipment', methods: ['POST'])]
@@ -56,6 +56,6 @@ class EquipmentController extends AbstractController
         return $this->json([
             'message' => 'Dodano nowy sprzęt',
             'data' => null
-        ]);
+        ], 200);
     }
 }
