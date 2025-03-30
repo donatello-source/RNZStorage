@@ -11,7 +11,6 @@ services:
       - symfony_network
     environment:
       - APP_ENV=dev
-      - DATABASE_URL=pgsql://symfony:symfony@db:5432/symfony
     depends_on:
       - db
 
@@ -31,7 +30,7 @@ services:
 
   db:
     image: postgres:13
-    container_name: symfony_postgres
+    container_name: db
     environment:
       POSTGRES_USER: symfony
       POSTGRES_PASSWORD: symfony

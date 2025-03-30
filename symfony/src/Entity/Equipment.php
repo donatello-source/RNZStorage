@@ -1,17 +1,18 @@
+<?php
+
 namespace App\Entity;
 
 use App\Repository\EquipmentRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: EquipmentRepository::class)]
-#[ORM\Table(name: "magazyn")]  // Mapa encji na tabelę "magazyn"
 class Equipment
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(name: "idsprzet", type: "integer")]
     private ?int $id = null;
-
+    
     #[ORM\Column(name: "nazwa", type: "string", length: 100)]
     private ?string $name = null;
 
@@ -26,8 +27,6 @@ class Equipment
 
     #[ORM\Column(name: "idkategoria", type: "integer", nullable: true)]
     private ?int $categoryId = null;
-
-    // Gettery i settery
 
     public function getId(): ?int
     {

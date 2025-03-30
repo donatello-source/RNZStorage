@@ -6,7 +6,7 @@ doctrine:
         user: '%env(DATABASE_USER)%'
         password: '%env(DATABASE_PASSWORD)%'
         server_version: '15.0'
-
+        url: '%env(DATABASE_URL)%'
 
         profiling_collect_backtrace: '%kernel.debug%'
         use_savepoints: true
