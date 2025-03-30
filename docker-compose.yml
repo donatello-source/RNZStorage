@@ -1,7 +1,8 @@
-version: '3.8'
-
 services:
   php:
+    build:
+      context: ./symfony
+      dockerfile: Dockerfile
     image: php:8.2-fpm
     container_name: symfony_php
     volumes:

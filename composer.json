@@ -1,0 +1,13 @@
+{
+    "require": {
+        "doctrine/orm": "^2.20",
+        "symfony/orm-pack": "^2.3",
+        "doctrine/doctrine-bundle": "^2.13"
+    },
+    "config": {
+    "platform": {
+        "php": "8.2"
+    }
+}
+
+}
