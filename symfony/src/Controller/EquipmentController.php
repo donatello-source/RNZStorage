@@ -6,6 +6,8 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Request;
+use App\Entity\Equipment;
+use App\Repository\EquipmentRepository;
 
 class EquipmentController extends AbstractController
 {
@@ -26,9 +28,10 @@ class EquipmentController extends AbstractController
 
 
     #[Route('/api/equipment', name: 'equipment_all', methods: ['GET'])]
-    public function equipmentAll(): JsonResponse
+    public function equipmentAll(EquipmentRepository $equipmentRepository): JsonResponse
     {
-        return $this->json($this->equipment, 200);
+        $equipments = $equipmentRepository -> findAll();
+        return $this->json($equipments, 200);
     }
 
     #[Route('/api/equipment/{id}', name: 'get_equipment_by_id', methods: ['GET'])]
