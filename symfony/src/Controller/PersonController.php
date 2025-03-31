@@ -44,10 +44,32 @@ final class PersonController extends AbstractController
         $person->setNazwisko($data['nazwisko']);
         $person->setMail($data['mail']);
         $person->setHaslo(password_hash($data['haslo'], PASSWORD_BCRYPT));
+        $person->setStanowisko("brak autoryzacji");
 
         $entityManager->persist($person);
         $entityManager->flush();
 
         return $this->json(['message' => 'Dodano nową osobę', 'data' => $person], 201);
     }
+
+    #[Route('/api/person/login', name: 'login_person', methods: ['POST'])]
+    public function loginPerson(Request $request, PersonRepository $personRepository): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+
+        if (!isset($data['mail'], $data['haslo'])) {
+            return $this->json(['error' => 'Missing email or password'], 400);
+        }
+
+        $person = $personRepository->findOneBy(['mail' => $data['mail']]);
+        
+        if (!$person || !password_verify($data['haslo'], $person->getHaslo())) {
+            return $this->json(['error' => 'Invalid email or password'], 401);
+        }
+
+        // Logic for generating JWT token or session could go here
+
+        return $this->json(['message' => 'Logged in successfully', 'data' => $person], 200);
+    }
+
 }

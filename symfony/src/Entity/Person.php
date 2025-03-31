@@ -25,6 +25,9 @@ class Person
     #[ORM\Column(length: 255)]
     private ?string $haslo = null;
 
+    #[ORM\Column(length: 20)]
+    private ?string $stanowisko = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -81,6 +84,18 @@ class Person
     public function setHaslo(string $haslo): static
     {
         $this->haslo = $haslo;
+
+        return $this;
+    }
+
+    public function getStanowisko(): ?string
+    {
+        return $this->stanowisko;
+    }
+
+    public function setStanowisko(string $stanowisko): static
+    {
+        $this->stanowisko = $stanowisko;
 
         return $this;
     }
