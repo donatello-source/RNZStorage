@@ -7,7 +7,7 @@ const Header = () => {
     <AppBar position="static" sx={{ backgroundColor: 'black' }}>
       <Toolbar>
         <Box sx={{ flexGrow: 1 }}>
-          <Typography variant="h6">Twoja Firma</Typography>
+          <Typography variant="h6">Robimy na Żywo</Typography>
         </Box>
       </Toolbar>
     </AppBar>
