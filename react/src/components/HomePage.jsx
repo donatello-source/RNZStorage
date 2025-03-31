@@ -15,6 +15,7 @@ const HomePage = () => {
     const fetchData = async () => {
       const response = await fetch('/api/equipment');
       const data = await response.json();
+      console.log(data);
       setEquipments(data);
     };
 

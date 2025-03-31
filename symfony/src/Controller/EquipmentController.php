@@ -8,15 +8,31 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Request;
 use App\Entity\Equipment;
 use App\Repository\EquipmentRepository;
+use App\Repository\CategoryRepository;
+use Doctrine\ORM\EntityManagerInterface;
+
 
 #[Route('/api/equipment')]
 final class EquipmentController extends AbstractController
 {
     #[Route('', name: 'equipment_all', methods: ['GET'])]
-    public function equipmentAll(EquipmentRepository $equipmentRepository): JsonResponse
+    public function equipmentAll(EquipmentRepository $equipmentRepository, CategoryRepository $categoryRepository): JsonResponse
     {
         $equipments = $equipmentRepository->findAll();
-        return $this->json($equipments, 200);
+        $data = array_map(function($equipment) use ($categoryRepository) {
+            $catId = $equipment->getCategoryId();
+            return [
+                'id' => $equipment->getId(),
+                'name' => $equipment->getName(),
+                'description' => $equipment->getDescription(),
+                'quantity' => $equipment->getQuantity(),
+                'price' => $equipment->getPrice(),
+                'categoryid' => $equipment->getCategoryId(),
+                'category' => $equipment->getCategoryId() ? $categoryRepository->find($catId)->getNazwa() : null,
+            ];
+        }, $equipments);
+    
+        return $this->json($data, 200);
     }
 
     #[Route('/{id}', name: 'get_equipment_by_id', methods: ['GET'])]
@@ -46,10 +62,11 @@ final class EquipmentController extends AbstractController
         }
 
         $equipment = new Equipment();
-        $equipment->setNazwa($data['nazwa']);
-        $equipment->setOpis($data['opis'] ?? null);
-        $equipment->setIlosc($data['ilosc']);
-        $equipment->setCena($data['cena']);
+        $equipment->setName($data['nazwa']);
+        $equipment->setDescription($data['opis'] ?? null);
+        $equipment->setQuantity($data['ilosc']);
+        $equipment->setPrice($data['cena']);
+        $equipment->setCategory($data['kategoria'] ?? null);
 
         $entityManager->persist($equipment);
         $entityManager->flush();
@@ -67,17 +84,20 @@ final class EquipmentController extends AbstractController
 
         $data = json_decode($request->getContent(), true);
         
-        if (isset($data['nazwa'])) {
-            $equipment->setNazwa($data['nazwa']);
+        if (isset($data['name'])) {
+            $equipment->setName($data['name']);
         }
-        if (isset($data['opis'])) {
-            $equipment->setOpis($data['opis']);
+        if (isset($data['description'])) {
+            $equipment->setDescription($data['description']);
         }
-        if (isset($data['ilosc'])) {
-            $equipment->setIlosc($data['ilosc']);
+        if (isset($data['quantity'])) {
+            $equipment->setQuantity($data['quantity']);
         }
-        if (isset($data['cena'])) {
-            $equipment->setCena($data['cena']);
+        if (isset($data['price'])) {
+            $equipment->setPrice($data['price']);
+        }
+        if (isset($data['categoryid'])) {
+            $equipment->setCategoryId($data['categoryid']);
         }
 
         $entityManager->flush();
