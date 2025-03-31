@@ -113,7 +113,7 @@ class Quote
         return $this;
     }
 
-    public function getDataKoniec(): ?string
+    public function getDataKoniec(): ?\DateTimeInterface
     {
         return $this->dataKoniec;
     }

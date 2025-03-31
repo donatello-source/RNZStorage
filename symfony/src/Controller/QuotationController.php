@@ -2,48 +2,87 @@
 
 namespace App\Controller;
 
+use App\Entity\Quote;
+use App\Entity\QuoteEquipment;
+use App\Repository\QuoteRepository;
+use App\Repository\QuoteEquipmentRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 
-final class QuotationController extends AbstractController
+#[Route('/api/quotation')]
+class QuotationController extends AbstractController
 {
-
-    private array $quotation = [
-        "firma" => "Event Solutions",
-        "cena_calosc" => 15200,
-        "sprzet" => [
-            ["id" => 1, "ilosc" => 2, "rabat" => 5],
-            ["id" => 3, "ilosc" => 4, "rabat" => 10],
-            ["id" => 5, "ilosc" => 1, "rabat" => 0],
-            ["id" => 7, "ilosc" => 3, "rabat" => 15]
-        ],
-        "adres" => "ul. Marszałkowska 10, Warszawa",
-        "dodatkowe_info" => "Wymagana dostawa i montaż."
-    ];
-
-
-
-    #[Route('/api/quotation', name: 'get_quotation', methods: ['GET'])]
-    public function getQuotation(): JsonResponse
+    #[Route('', name: 'get_quotation', methods: ['GET'])]
+    public function getQuotation(QuoteRepository $quoteRepository): JsonResponse
     {
-        return $this->json($this->quotation, 200);
+        $quotations = $quoteRepository->findAll();
+        return $this->json($quotations, 200);
     }
 
-    #[Route('/api/quotation/equipment', name: 'get_quotation_equipment', methods: ['GET'])]
-    public function getQuotationEquipment(): JsonResponse
+    #[Route('/{id}', name: 'get_quotation_by_id', methods: ['GET'])]
+    public function getQuotationById(int $id, QuoteRepository $quoteRepository): JsonResponse
     {
-        return $this->json($this->quotation['sprzet'], 200);
-    }
-
-    #[Route('/api/quotation/equipment/{id}', name: 'get_quotation_equipment_by_id', methods: ['GET'])]
-    public function getQuotationEquipmentById(int $id): JsonResponse
-    {
-        foreach ($this->quotation['sprzet'] as $item) {
-            if ($item['id'] === $id) {
-                return $this->json($item, 200);
-            }
+        $quote = $quoteRepository->find($id);
+        if (!$quote) {
+            return $this->json(['error' => 'Quotation not found'], 404);
         }
-        return $this->json(['error' => 'Item not found in quotation'], 404);
+        return $this->json($quote, 200);
+    }
+
+    #[Route('/equipment', name: 'get_quotation_equipment', methods: ['GET'])]
+    public function getQuotationEquipment(QuoteEquipmentRepository $quoteEquipmentRepository): JsonResponse
+    {
+        $quoteEquipment = $quoteEquipmentRepository->findAll();
+        return $this->json($quoteEquipment, 200);
+    }
+
+    #[Route('/equipment/{id}', name: 'get_quotation_equipment_by_id', methods: ['GET'])]
+    public function getQuotationEquipmentById(int $id, QuoteEquipmentRepository $quoteEquipmentRepository): JsonResponse
+    {
+        $quoteEquipment = $quoteEquipmentRepository->find($id);
+        if (!$quoteEquipment) {
+            return $this->json(['error' => 'Item not found in quotation'], 404);
+        }
+        return $this->json($quoteEquipment, 200);
+    }
+
+    #[Route('', name: 'add_quotation', methods: ['POST'])]
+    public function addQuotation(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+
+        if (!isset($data['company'], $data['status'], $data['dane_kontaktowe'], $data['miejsce'])) {
+            return $this->json(['error' => 'Missing required fields'], 400);
+        }
+
+        $quote = new Quote();
+        $quote->setCompany($data['company']);
+        $quote->setStatus($data['status']);
+        $quote->setDaneKontaktowe($data['dane_kontaktowe']);
+        $quote->setMiejsce($data['miejsce']);
+        $quote->setDataWystawienia(new \DateTime());
+
+        $entityManager->persist($quote);
+        $entityManager->flush();
+
+        return $this->json(['message' => 'Dodano nową wycenę', 'data' => $quote], 201);
+    }
+
+    #[Route('/{id}', name: 'delete_quotation', methods: ['DELETE'])]
+    public function deleteQuotation(int $id, QuoteRepository $quoteRepository, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $quote = $quoteRepository->find($id);
+        if (!$quote) {
+            return $this->json(['error' => 'Quotation not found'], 404);
+        }
+
+        $entityManager->remove($quote);
+        $entityManager->flush();
+
+        return $this->json(['message' => 'Wycena została usunięta'], 200);
     }
 }
+
