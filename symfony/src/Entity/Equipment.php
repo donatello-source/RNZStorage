@@ -12,7 +12,7 @@ class Equipment
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(name: "idsprzet", type: "integer")]
+    #[ORM\Column(name: "id", type: "integer")]
     #[Groups('equipment:read')]
     private ?int $id = null;
     

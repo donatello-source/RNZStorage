@@ -10,26 +10,20 @@ use Doctrine\ORM\Mapping as ORM;
 class QuoteEquipment
 {
     #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column]
-    private ?int $id = null;
+    #[ORM\ManyToOne(targetEntity: Quote::class)]
+    #[ORM\JoinColumn(name: "idQuote", referencedColumnName: "id", nullable: false, onDelete: "CASCADE")]
+    private Quote $idQuote;
 
-    #[ORM\Column]
-    private ?int $idQuote = null;
-
-    #[ORM\Column]
-    private ?int $idEquipment = null;
+    #[ORM\Id]
+    #[ORM\ManyToOne(targetEntity: Equipment::class)]
+    #[ORM\JoinColumn(name: "idEquipment", referencedColumnName: "id", nullable: false, onDelete: "CASCADE")]
+    private Equipment $idEquipment;
 
     #[ORM\Column]
     private ?int $ilosc = null;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 5, scale: 2)]
     private ?string $rabat = null;
-
-    public function getId(): ?int
-    {
-        return $this->id;
-    }
 
     public function getIdQuote(): ?int
     {

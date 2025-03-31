@@ -19,7 +19,7 @@ class Person
     #[ORM\Column(length: 50)]
     private ?string $nazwisko = null;
 
-    #[ORM\Column(length: 100)]
+    #[ORM\Column(length: 100, unique: true)]
     private ?string $mail = null;
 
     #[ORM\Column(length: 255)]
