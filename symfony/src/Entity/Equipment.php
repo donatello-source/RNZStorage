@@ -4,6 +4,8 @@ namespace App\Entity;
 
 use App\Repository\EquipmentRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
+
 
 #[ORM\Entity(repositoryClass: EquipmentRepository::class)]
 class Equipment
@@ -11,21 +13,27 @@ class Equipment
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(name: "idsprzet", type: "integer")]
+    #[Groups('equipment:read')]
     private ?int $id = null;
     
     #[ORM\Column(name: "nazwa", type: "string", length: 100)]
+    #[Groups('equipment:read')]
     private ?string $name = null;
 
     #[ORM\Column(name: "opis", type: "text", nullable: true)]
+    #[Groups('equipment:read')]
     private ?string $description = null;
 
     #[ORM\Column(name: "ilosc", type: "integer")]
+    #[Groups('equipment:read')]
     private int $quantity;
 
     #[ORM\Column(name: "cena", type: "decimal", precision: 10, scale: 2)]
+    #[Groups('equipment:read')]
     private float $price;
 
     #[ORM\Column(name: "idkategoria", type: "integer", nullable: true)]
+    #[Groups('equipment:read')]
     private ?int $categoryId = null;
 
     public function getId(): ?int

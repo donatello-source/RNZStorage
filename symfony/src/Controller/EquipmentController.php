@@ -30,9 +30,11 @@ class EquipmentController extends AbstractController
     #[Route('/api/equipment', name: 'equipment_all', methods: ['GET'])]
     public function equipmentAll(EquipmentRepository $equipmentRepository): JsonResponse
     {
-        $equipments = $equipmentRepository -> findAll();
-        return $this->json($equipments, 200);
+        $equipments = $equipmentRepository->findAll();
+        // var_dump($equipments);
+        return $this->json($equipments, 200, [], ['groups' => 'equipment:read']);
     }
+
 
     #[Route('/api/equipment/{id}', name: 'get_equipment_by_id', methods: ['GET'])]
     public function getEquipmentById(int $id): JsonResponse
