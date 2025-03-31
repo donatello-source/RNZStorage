@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, TextField } from '@mui/material';
+import { Button, TextField, Snackbar, Alert } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import '../style/LoginForm.css';
 
@@ -12,6 +12,11 @@ function LoginForm() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [errors, setErrors] = useState({});
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
+
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -42,14 +47,25 @@ function LoginForm() {
             haslo: password,
           }),
         });
-        if (response.ok) setIsRegistering(false);
+        if (response.ok) {
+          setIsRegistering(false);
+          setSnackbar({ open: true, message: 'Rejestracja zakończona sukcesem!', severity: 'success' });
+        }
       } else {
         const response = await fetch('/api/person/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ mail: email, haslo: password }),
         });
-        if (response.ok) navigate('/home');
+        const data = await response.json();
+        if (response.ok) {
+          setSnackbar({ open: true, message: `Witaj ${data.data.imie} ${data.data.nazwisko}!`, severity: 'success' });
+          localStorage.setItem('user', JSON.stringify(data.data));
+          localStorage.setItem('token', data.token);
+          setTimeout(() => navigate('/home'), 1000);
+        } else {
+          setSnackbar({ open: true, message: 'Niepoprawny login i/lub hasło', severity: 'error' });
+        }
       }
     }
   };
@@ -63,77 +79,28 @@ function LoginForm() {
           <form onSubmit={handleSubmit}>
             {isRegistering && (
               <>
-                <TextField
-                  label="Imię"
-                  fullWidth
-                  margin="normal"
-                  variant="outlined"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  error={!!errors.firstName}
-                  helperText={errors.firstName}
-                />
-                <TextField
-                  label="Nazwisko"
-                  fullWidth
-                  margin="normal"
-                  variant="outlined"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  error={!!errors.lastName}
-                  helperText={errors.lastName}
-                />
+                <TextField label="Imię" fullWidth margin="normal" variant="outlined" value={firstName} onChange={(e) => setFirstName(e.target.value)} error={!!errors.firstName} helperText={errors.firstName} />
+                <TextField label="Nazwisko" fullWidth margin="normal" variant="outlined" value={lastName} onChange={(e) => setLastName(e.target.value)} error={!!errors.lastName} helperText={errors.lastName} />
               </>
             )}
-            <TextField
-              label="Email"
-              fullWidth
-              margin="normal"
-              variant="outlined"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              error={!!errors.email}
-              helperText={errors.email}
-            />
-            <TextField
-              label="Hasło"
-              fullWidth
-              margin="normal"
-              variant="outlined"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              error={!!errors.password}
-              helperText={errors.password}
-            />
-            {isRegistering && (
-              <TextField
-                label="Powtórz Hasło"
-                fullWidth
-                margin="normal"
-                variant="outlined"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                error={!!errors.confirmPassword}
-                helperText={errors.confirmPassword}
-              />
-            )}
+            <TextField label="Email" fullWidth margin="normal" variant="outlined" type="email" value={email} onChange={(e) => setEmail(e.target.value)} error={!!errors.email} helperText={errors.email} />
+            <TextField label="Hasło" fullWidth margin="normal" variant="outlined" type="password" value={password} onChange={(e) => setPassword(e.target.value)} error={!!errors.password} helperText={errors.password} />
+            {isRegistering && <TextField label="Powtórz Hasło" fullWidth margin="normal" variant="outlined" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} error={!!errors.confirmPassword} helperText={errors.confirmPassword} />}
             <Button type="submit" className="login-button" variant="contained">
               {isRegistering ? 'Zarejestruj' : 'Zaloguj'}
             </Button>
             <div className="separator">lub</div>
-            <Button
-              variant="outlined"
-              className="register-button"
-              onClick={() => setIsRegistering(!isRegistering)}
-            >
+            <Button variant="outlined" className="register-button" onClick={() => setIsRegistering(!isRegistering)}>
               {isRegistering ? 'Wróć do logowania' : 'Utwórz konto'}
             </Button>
           </form>
         </div>
       </div>
+      <Snackbar open={snackbar.open} autoHideDuration={3000} onClose={handleCloseSnackbar} anchorOrigin={{ vertical: 'top', horizontal: 'right' }}>
+        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </div>
   );
 }

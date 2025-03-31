@@ -1,6 +1,7 @@
 /* LoginForm.css */
 body{
-    overflow: hidden;
+    margin: 0;
+    padding: 0;
 }
 .login-container {
     height: 100vh;

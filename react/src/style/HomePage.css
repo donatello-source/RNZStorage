@@ -1,0 +1,56 @@
+/* HomePage.css */
+body{
+    margin: 0;
+    padding: 0;
+}
+.home-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background-color: #333;
+  }
+  
+  .home-content {
+    display: flex;
+    flex-grow: 1;
+  }
+  
+  .main-content {
+    flex-grow: 1;
+    padding: 20px;
+    background-color: #4e4e4e;
+    color: white;
+  }
+  
+  .welcome-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .welcome-text {
+    font-size: 24px;
+    font-weight: bold;
+  }
+  
+  .logout-button {
+    background-color: darkred !important;
+    color: white !important;
+    padding: 10px 20px;
+    border-radius: 8px;
+  }
+  
+  .equipment-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+  
+  .equipment-grid .MuiGrid-item {
+    transition: transform 0.3s ease-in-out;
+  }
+  
+  .equipment-grid .MuiGrid-item:hover {
+    transform: scale(1.05);
+  }
