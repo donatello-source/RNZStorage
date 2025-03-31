@@ -52,7 +52,7 @@ final class PersonController extends AbstractController
         return $this->json(['message' => 'Dodano nową osobę', 'data' => $person], 201);
     }
 
-    #[Route('/api/person/login', name: 'login_person', methods: ['POST'])]
+    #[Route('/login', name: 'login_person', methods: ['POST'])]
     public function loginPerson(Request $request, PersonRepository $personRepository): JsonResponse
     {
         $data = json_decode($request->getContent(), true);

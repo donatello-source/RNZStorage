@@ -1,0 +1,17 @@
+// src/components/Header.js
+import React from 'react';
+import { AppBar, Toolbar, Typography, Box } from '@mui/material';
+
+const Header = () => {
+  return (
+    <AppBar position="static" sx={{ backgroundColor: 'black' }}>
+      <Toolbar>
+        <Box sx={{ flexGrow: 1 }}>
+          <Typography variant="h6">Twoja Firma</Typography>
+        </Box>
+      </Toolbar>
+    </AppBar>
+  );
+};
+
+export default Header;
