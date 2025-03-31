@@ -10,7 +10,7 @@ use App\Entity\Equipment;
 use App\Repository\EquipmentRepository;
 
 #[Route('/api/equipment')]
-class EquipmentController extends AbstractController
+final class EquipmentController extends AbstractController
 {
     #[Route('', name: 'equipment_all', methods: ['GET'])]
     public function equipmentAll(EquipmentRepository $equipmentRepository): JsonResponse
