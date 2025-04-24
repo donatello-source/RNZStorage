@@ -8,10 +8,35 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
+use OpenApi\Annotations as OA;
+use Nelmio\ApiDocBundle\Annotation\Model;
+use Symfony\Component\HttpFoundation\Request;
 
 #[Route('/api/category')]
 final class CategoryController extends AbstractController
 {
+
+        /**
+     * Pobiera wszystkie kategorie
+     *
+     * @OA\Get(
+     *     path="/api/category",
+     *     summary="Lista wszystkich kategorii",
+     *     tags={"Kategorie"},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Zwraca listę kategorii",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="nazwa", type="string", example="Elektronika")
+     *             )
+     *         )
+     *     )
+     * )
+     */
     #[Route('', name: 'category_all', methods: ['GET'])]
     public function categoryAll(CategoryRepository $categoryRepository): JsonResponse
     {
