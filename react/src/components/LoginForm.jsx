@@ -17,6 +17,17 @@ function LoginForm() {
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
   };
+  
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  const handleAddOpen = () => setIsAddModalOpen(true);
+  const handleAddClose = () => setIsAddModalOpen(false);
+  
+  const handleAddEquipment = (newEquipment) => {
+    console.log('Nowy sprzęt:', newEquipment);
+    // Tutaj dodasz fetch() do API -> POST na `/api/equipment`
+    handleAddClose();
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();

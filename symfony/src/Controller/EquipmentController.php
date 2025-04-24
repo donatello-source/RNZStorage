@@ -57,16 +57,16 @@ final class EquipmentController extends AbstractController
     {
         $data = json_decode($request->getContent(), true);
 
-        if (!isset($data['nazwa'], $data['ilosc'], $data['cena'])) {
+        if (!isset($data['name'], $data['quantity'], $data['price'])) {
             return $this->json(['error' => 'Missing required fields'], 400);
         }
 
         $equipment = new Equipment();
-        $equipment->setName($data['nazwa']);
-        $equipment->setDescription($data['opis'] ?? null);
-        $equipment->setQuantity($data['ilosc']);
-        $equipment->setPrice($data['cena']);
-        $equipment->setCategory($data['kategoria'] ?? null);
+        $equipment->setName($data['name']);
+        $equipment->setDescription($data['description'] ?? null);
+        $equipment->setQuantity($data['quantity']);
+        $equipment->setPrice($data['price']);
+        $equipment->setCategoryId($data['categoryid'] ?? null);
 
         $entityManager->persist($equipment);
         $entityManager->flush();

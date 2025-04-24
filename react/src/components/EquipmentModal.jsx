@@ -18,7 +18,6 @@ const EquipmentModal = ({ open, onClose, equipment, onSave }) => {
       try {
         const response = await fetch('/api/category');
         const data = await response.json();
-        console.log(data);
         setCategories(data);
       } catch (error) {
         console.error('Błąd pobierania kategorii:', error);
@@ -46,26 +45,17 @@ const EquipmentModal = ({ open, onClose, equipment, onSave }) => {
   };
 
   const handleSave = async () => {
-    try {
-      const response = await fetch(`/api/equipment/${formData.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
-      });
-
-      if (!response.ok) {
-        throw new Error('Błąd podczas zapisywania zmian');
-      }
-
-      const result = await response.json();
-      console.log('Zapisano zmiany:', result);
-
-      onSave(result.data);
+    const url = formData.id ? `/api/equipment/${formData.id}` : '/api/equipment';
+    const method = formData.id ? 'PUT' : 'POST';
+  
+    const response = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData),
+    });
+  
+    if (response.ok) {
       onClose();
-    } catch (error) {
-      console.error('Błąd zapisu:', error);
     }
   };
 

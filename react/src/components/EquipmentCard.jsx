@@ -13,7 +13,7 @@ const EquipmentCard = ({ equipment }) => {
       >
         <CardContent>
           <Typography variant="h6">{equipment.name}</Typography>
-          <Typography variant="body2">Liczba: {equipment.quantity}</Typography>
+          <Typography variant="body2">Ilość: {equipment.quantity}</Typography>
           <Typography variant="body2">Cena: {equipment.price} PLN</Typography>
         </CardContent>
       </Card>

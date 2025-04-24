@@ -67,7 +67,7 @@ final class PersonController extends AbstractController
             return $this->json(['error' => 'Invalid email or password'], 401);
         }
 
-        // Logic for generating JWT token or session could go here
+        // TODO TOKEN JWT :D
 
         return $this->json(['message' => 'Logged in successfully', 'data' => $person], 200);
     }

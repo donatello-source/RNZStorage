@@ -3,6 +3,7 @@ import { Box, Grid, Typography, Button } from '@mui/material';
 import EquipmentCard from './EquipmentCard';
 import NavMenu from './NavMenu';
 import Header from './Header';
+import EquipmentModal from './EquipmentModal';
 import { useNavigate } from 'react-router-dom';
 import '../style/HomePage.css';
 
@@ -10,7 +11,10 @@ const HomePage = () => {
   const [equipments, setEquipments] = useState([]);
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
+  const [isAdding, setIsAdding] = useState(false);
+  const [addModalOpen, setAddModalOpen] = useState(false);
 
+  
   useEffect(() => {
     const fetchData = async () => {
       const response = await fetch('/api/equipment');
@@ -36,6 +40,17 @@ const HomePage = () => {
     localStorage.removeItem('token');
     navigate('/');
   };
+  
+  const refreshEquipment = async () => {
+    const response = await fetch('/api/equipment');
+    const data = await response.json();
+    setEquipments(data);
+  };
+
+  const handleAddClick = () => {
+    setIsAdding(true);
+    setAddModalOpen(true);
+  };
 
   return (
     <div className="home-container">
@@ -44,9 +59,18 @@ const HomePage = () => {
         <NavMenu />
         <Box className="main-content">
           <Box className="welcome-header">
-            <Typography variant="h4" className="welcome-text">
-              Witaj {user ? `${user.imie} ${user.nazwisko}` : 'Gościu'}!
-            </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Typography variant="h4" className="welcome-text">
+                Witaj {user ? `${user.imie} ${user.nazwisko}` : 'Gościu'}!
+              </Typography>
+              <Button 
+                variant="outlined" 
+                size="small" 
+                onClick={refreshEquipment}
+              >
+                Odśwież
+              </Button>
+            </Box>
             <Button className="logout-button" variant="contained" onClick={handleLogout}>
               Wyloguj się
             </Button>
@@ -58,9 +82,28 @@ const HomePage = () => {
               </Grid>
             ))}
           </Grid>
+          <Button
+            variant="contained"
+            color="primary"
+            sx={{
+              position: 'fixed',
+              bottom: 20,
+              right: 20,
+            }}
+            onClick={handleAddClick}
+          >
+            Dodaj sprzęt
+          </Button>
+          <EquipmentModal
+            open={addModalOpen}
+            onClose={() => setAddModalOpen(false)}
+            equipment={null}
+            isAdding={true}
+          />
         </Box>
       </Box>
     </div>
+    
   );
 };
 
