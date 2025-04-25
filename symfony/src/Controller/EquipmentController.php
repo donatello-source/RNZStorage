@@ -2,20 +2,44 @@
 
 namespace App\Controller;
 
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\HttpFoundation\Request;
 use App\Entity\Equipment;
 use App\Repository\EquipmentRepository;
 use App\Repository\CategoryRepository;
 use Doctrine\ORM\EntityManagerInterface;
-
+use OpenApi\Attributes as OA;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/api/equipment')]
 final class EquipmentController extends AbstractController
 {
     #[Route('', name: 'equipment_all', methods: ['GET'])]
+    #[OA\Get(
+        summary: 'Pobiera listę całego sprzętu',
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Lista sprzętu',
+                content: new OA\JsonContent(
+                    type: 'array',
+                    items: new OA\Items(
+                        properties: [
+                            new OA\Property(property: 'id', type: 'integer', example: 1),
+                            new OA\Property(property: 'name', type: 'string', example: 'Laptop Dell'),
+                            new OA\Property(property: 'description', type: 'string', example: 'Laptop służbowy'),
+                            new OA\Property(property: 'quantity', type: 'integer', example: 5),
+                            new OA\Property(property: 'price', type: 'number', format: 'float', example: 3999.99),
+                            new OA\Property(property: 'categoryid', type: 'integer', example: 2),
+                            new OA\Property(property: 'category', type: 'string', example: 'Laptopy')
+                        ]
+                    )
+                )
+            )
+        ]
+    )]
+    #[OA\Tag(name: 'Sprzęt')]
     public function equipmentAll(EquipmentRepository $equipmentRepository, CategoryRepository $categoryRepository): JsonResponse
     {
         $equipments = $equipmentRepository->findAll();
@@ -27,25 +51,69 @@ final class EquipmentController extends AbstractController
                 'description' => $equipment->getDescription(),
                 'quantity' => $equipment->getQuantity(),
                 'price' => $equipment->getPrice(),
-                'categoryid' => $equipment->getCategoryId(),
-                'category' => $equipment->getCategoryId() ? $categoryRepository->find($catId)->getNazwa() : null,
+                'categoryid' => $catId,
+                'category' => $catId ? $categoryRepository->find($catId)?->getNazwa() : null,
             ];
         }, $equipments);
-    
+
         return $this->json($data, 200);
     }
 
     #[Route('/{id}', name: 'get_equipment_by_id', methods: ['GET'])]
+    #[OA\Get(
+        summary: 'Pobiera sprzęt po ID',
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                description: 'ID sprzętu',
+                schema: new OA\Schema(type: 'integer')
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Zwraca dane sprzętu',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'id', type: 'integer', example: 1),
+                        new OA\Property(property: 'name', type: 'string', example: 'Laptop Dell'),
+                        new OA\Property(property: 'description', type: 'string', example: 'Laptop służbowy'),
+                        new OA\Property(property: 'quantity', type: 'integer', example: 5),
+                        new OA\Property(property: 'price', type: 'number', format: 'float', example: 3999.99),
+                        new OA\Property(property: 'categoryid', type: 'integer', example: 2),
+                        new OA\Property(property: 'category', type: 'string', example: 'Laptopy')
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Sprzęt nie znaleziony'
+            )
+        ]
+    )]
+    #[OA\Tag(name: 'Sprzęt')]
     public function getEquipmentById(int $id, EquipmentRepository $equipmentRepository): JsonResponse
     {
         $equipment = $equipmentRepository->find($id);
         if (!$equipment) {
-            return $this->json(['error' => 'Item not found'], 404);
+            return $this->json(['error' => 'Sprzęt nie znaleziony'], 404);
         }
         return $this->json($equipment, 200);
     }
 
     #[Route('/category/{category}', name: 'get_equipment_by_category', methods: ['GET'])]
+    #[OA\Get(
+        summary: 'Pobiera sprzęt z danej kategorii',
+        parameters: [
+            new OA\Parameter(name: 'category', in: 'path', required: true, schema: new OA\Schema(type: 'string'))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Lista sprzętu z danej kategorii')
+        ]
+    )]
+    #[OA\Tag(name: 'Sprzęt')]
     public function getEquipmentByCategory(string $category, EquipmentRepository $equipmentRepository): JsonResponse
     {
         $equipments = $equipmentRepository->findBy(['category' => $category]);
@@ -53,6 +121,27 @@ final class EquipmentController extends AbstractController
     }
 
     #[Route('', name: 'add_equipment', methods: ['POST'])]
+    #[OA\Post(
+        summary: 'Dodaje nowy sprzęt',
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['name', 'quantity', 'price'],
+                properties: [
+                    new OA\Property(property: 'name', type: 'string', example: 'Monitor Samsung'),
+                    new OA\Property(property: 'description', type: 'string', example: '27 cali Full HD'),
+                    new OA\Property(property: 'quantity', type: 'integer', example: 10),
+                    new OA\Property(property: 'price', type: 'number', format: 'float', example: 799.99),
+                    new OA\Property(property: 'categoryid', type: 'integer', example: 3)
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 201, description: 'Sprzęt został dodany'),
+            new OA\Response(response: 400, description: 'Błędne dane wejściowe')
+        ]
+    )]
+    #[OA\Tag(name: 'Sprzęt')]
     public function addEquipment(Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
@@ -75,6 +164,29 @@ final class EquipmentController extends AbstractController
     }
 
     #[Route('/{id}', name: 'edit_equipment', methods: ['PUT'])]
+    #[OA\Put(
+        summary: 'Aktualizuje sprzęt',
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'name', type: 'string'),
+                    new OA\Property(property: 'description', type: 'string'),
+                    new OA\Property(property: 'quantity', type: 'integer'),
+                    new OA\Property(property: 'price', type: 'number', format: 'float'),
+                    new OA\Property(property: 'categoryid', type: 'integer')
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Sprzęt został zaktualizowany'),
+            new OA\Response(response: 404, description: 'Nie znaleziono sprzętu')
+        ]
+    )]
+    #[OA\Tag(name: 'Sprzęt')]
     public function editEquipment(int $id, Request $request, EquipmentRepository $equipmentRepository, EntityManagerInterface $entityManager): JsonResponse
     {
         $equipment = $equipmentRepository->find($id);
@@ -83,7 +195,7 @@ final class EquipmentController extends AbstractController
         }
 
         $data = json_decode($request->getContent(), true);
-        
+
         if (isset($data['name'])) {
             $equipment->setName($data['name']);
         }
@@ -106,6 +218,17 @@ final class EquipmentController extends AbstractController
     }
 
     #[Route('/{id}', name: 'delete_equipment', methods: ['DELETE'])]
+    #[OA\Delete(
+        summary: 'Usuwa sprzęt po ID',
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Sprzęt został usunięty'),
+            new OA\Response(response: 404, description: 'Nie znaleziono sprzętu')
+        ]
+    )]
+    #[OA\Tag(name: 'Sprzęt')]
     public function deleteEquipment(int $id, EquipmentRepository $equipmentRepository, EntityManagerInterface $entityManager): JsonResponse
     {
         $equipment = $equipmentRepository->find($id);
