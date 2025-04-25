@@ -5,52 +5,81 @@ namespace App\Controller;
 use App\Entity\Category;
 use App\Repository\CategoryRepository;
 use Doctrine\ORM\EntityManagerInterface;
+
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\Routing\Attribute\Route;
-use OpenApi\Annotations as OA;
-use Nelmio\ApiDocBundle\Annotation\Model;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Routing\Attribute\Route;
 
-#[Route('/api/category')]
+use OpenApi\Attributes as OA;
+
+#[OA\Tag(name: 'Kategorie')]
 final class CategoryController extends AbstractController
 {
-
-        /**
-     * Pobiera wszystkie kategorie
-     *
-     * @OA\Get(
-     *     path="/api/category",
-     *     summary="Lista wszystkich kategorii",
-     *     tags={"Kategorie"},
-     *     @OA\Response(
-     *         response=200,
-     *         description="Zwraca listę kategorii",
-     *         @OA\JsonContent(
-     *             type="array",
-     *             @OA\Items(
-     *                 type="object",
-     *                 @OA\Property(property="id", type="integer", example=1),
-     *                 @OA\Property(property="nazwa", type="string", example="Elektronika")
-     *             )
-     *         )
-     *     )
-     * )
-     */
-    #[Route('', name: 'category_all', methods: ['GET'])]
+    #[Route('/api/category', name: 'category_all', methods: ['GET'])]
+    #[OA\Get(
+        summary: 'Lista wszystkich kategorii',
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Zwraca listę kategorii',
+                content: new OA\JsonContent(
+                    type: 'array',
+                    items: new OA\Items(
+                        properties: [
+                            new OA\Property(property: 'id', type: 'integer', example: 1),
+                            new OA\Property(property: 'nazwa', type: 'string', example: 'Video')
+                        ]
+                    )
+                )
+            )
+        ]
+    )]
+    #[OA\Tag(name: 'Kategorie')]
     public function categoryAll(CategoryRepository $categoryRepository): JsonResponse
     {
         $categories = $categoryRepository->findAll();
-        return $this->json($categories, 200);
+        return $this->json($categories, 200, [], ['groups' => ['category:read']]);
     }
 
-    #[Route('', name: 'add_category', methods: ['POST'])]
+
+    #[Route('/api/category', name: 'add_category', methods: ['POST'])]
+    #[OA\Post(
+        summary: 'Dodaje nową kategorię',
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                type: 'object',
+                required: ['nazwa'],
+                properties: [
+                    new OA\Property(property: 'nazwa', type: 'string', example: 'Sport')
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'Pomyślnie dodano kategorię',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'id', type: 'integer', example: 5),
+                        new OA\Property(property: 'nazwa', type: 'string', example: 'Sport')
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 400,
+                description: 'Brak wymaganych danych'
+            )
+        ]
+    )]
+    #[OA\Tag(name: 'Kategorie')]
     public function addCategory(Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
 
         if (!isset($data['nazwa'])) {
-            return $this->json(['error' => 'Missing required fields'], 400);
+            return $this->json(['error' => 'Missing required field: nazwa'], 400);
         }
 
         $category = new Category();
@@ -59,22 +88,50 @@ final class CategoryController extends AbstractController
         $entityManager->persist($category);
         $entityManager->flush();
 
-        return $this->json(['message' => 'Category added successfully', 'data' => $category], 201);
+        return $this->json($category, 201, [], ['groups' => ['category:read']]);
     }
 
-    #[Route('/{id}', name: 'delete_category', methods: ['DELETE'])]
+    #[Route('/api/category/{id}', name: 'delete_category', methods: ['DELETE'])]
+    #[OA\Delete(
+        summary: 'Usuwa kategorię po ID',
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                description: 'ID kategorii',
+                schema: new OA\Schema(type: 'integer')
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Kategoria została usunięta',
+                content: new OA\JsonContent(
+                    type: 'object',
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string', example: 'Category deleted successfully')
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Kategoria nie została znaleziona'
+            )
+        ]
+    )]
+    #[OA\Tag(name: 'Kategorie')]
     public function deleteCategory(int $id, CategoryRepository $categoryRepository, EntityManagerInterface $entityManager): JsonResponse
     {
         $category = $categoryRepository->find($id);
-    
+
         if (!$category) {
             return $this->json(['error' => 'Category not found'], 404);
         }
-    
+
         $entityManager->remove($category);
         $entityManager->flush();
-    
+
         return $this->json(['message' => 'Category deleted successfully'], 200);
     }
-    
 }

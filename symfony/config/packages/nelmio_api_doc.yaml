@@ -4,6 +4,14 @@ nelmio_api_doc:
             title: 'API RNZStorage'
             description: 'Dokumentacja REST API'
             version: '1.0.0'
+        tags:
+            - name: 'Kategorie'
+            - name: 'Firma'
+            - name: 'Sprzęt'
+            - name: 'Osoby'
+            - name: 'Wyceny'
+
+
     areas:
         default:
-            path_patterns: [ ^/api ]
+            path_patterns: ['^/api']
