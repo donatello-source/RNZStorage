@@ -52,7 +52,7 @@ final class CategoryController extends AbstractController
                 type: 'object',
                 required: ['nazwa'],
                 properties: [
-                    new OA\Property(property: 'nazwa', type: 'string', example: 'Sport')
+                    new OA\Property(property: 'nazwa', type: 'string', example: 'Udźwiękowenie')
                 ]
             )
         ),
@@ -63,7 +63,7 @@ final class CategoryController extends AbstractController
                 content: new OA\JsonContent(
                     properties: [
                         new OA\Property(property: 'id', type: 'integer', example: 5),
-                        new OA\Property(property: 'nazwa', type: 'string', example: 'Sport')
+                        new OA\Property(property: 'nazwa', type: 'string', example: 'Udźwiękowenie')
                     ]
                 )
             ),
@@ -110,7 +110,7 @@ final class CategoryController extends AbstractController
                 content: new OA\JsonContent(
                     type: 'object',
                     properties: [
-                        new OA\Property(property: 'message', type: 'string', example: 'Category deleted successfully')
+                        new OA\Property(property: 'message', type: 'string', example: 'Kategoria została usunięta')
                     ]
                 )
             ),
@@ -126,12 +126,12 @@ final class CategoryController extends AbstractController
         $category = $categoryRepository->find($id);
 
         if (!$category) {
-            return $this->json(['error' => 'Category not found'], 404);
+            return $this->json(['error' => 'Kategoria nie została znaleziona'], 404);
         }
 
         $entityManager->remove($category);
         $entityManager->flush();
 
-        return $this->json(['message' => 'Category deleted successfully'], 200);
+        return $this->json(['message' => 'Kategoria została usunięta'], 200);
     }
 }
