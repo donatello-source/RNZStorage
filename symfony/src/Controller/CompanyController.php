@@ -134,7 +134,7 @@ final class CompanyController extends AbstractController
         }
 
         $company = new Company();
-        $company->setName($data['nazwa']);
+        $company->setNazwa($data['nazwa']);
         $company->setNip($data['nip']);
         $company->setAdres($data['adres']);
         $company->setTelefon($data['telefon'] ?? null);
