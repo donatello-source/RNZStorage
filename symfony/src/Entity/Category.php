@@ -18,8 +18,6 @@ class Category
     #[Groups(['category:read', 'category:write'])]
     private string $nazwa;
 
-    // Gettery i settery...
-
     public function getId(): ?int
     {
         return $this->id;
