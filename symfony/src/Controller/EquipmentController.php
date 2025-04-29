@@ -94,31 +94,90 @@ final class EquipmentController extends AbstractController
         ]
     )]
     #[OA\Tag(name: 'Sprzęt')]
-    public function getEquipmentById(int $id, EquipmentRepository $equipmentRepository): JsonResponse
-    {
+    public function getEquipmentById(
+        int $id,
+        EquipmentRepository $equipmentRepository,
+        CategoryRepository $categoryRepository
+    ): JsonResponse {
         $equipment = $equipmentRepository->find($id);
+
         if (!$equipment) {
             return $this->json(['error' => 'Sprzęt nie znaleziony'], 404);
         }
-        return $this->json($equipment, 200);
+
+        $category = $equipment->getCategoryId()
+            ? $categoryRepository->find($equipment->getCategoryId())?->getNazwa()
+            : null;
+
+        $data = [
+            'id' => $equipment->getId(),
+            'name' => $equipment->getName(),
+            'description' => $equipment->getDescription(),
+            'quantity' => $equipment->getQuantity(),
+            'price' => $equipment->getPrice(),
+            'categoryid' => $equipment->getCategoryId(),
+            'category' => $category
+        ];
+
+        return $this->json($data, 200);
     }
 
-    #[Route('/category/{category}', name: 'get_equipment_by_category', methods: ['GET'])]
+
+    #[Route('/category/{categoryId}', name: 'get_equipment_by_category', methods: ['GET'])]
     #[OA\Get(
-        summary: 'Pobiera sprzęt z danej kategorii',
+        summary: 'Pobiera sprzęt z danej kategorii po ID',
         parameters: [
-            new OA\Parameter(name: 'category', in: 'path', required: true, schema: new OA\Schema(type: 'string'))
+            new OA\Parameter(name: 'categoryId', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
         ],
         responses: [
-            new OA\Response(response: 200, description: 'Lista sprzętu z danej kategorii')
+            new OA\Response(
+                response: 200,
+                description: 'Lista sprzętu z danej kategorii',
+                content: new OA\JsonContent(
+                    type: 'array',
+                    items: new OA\Items(
+                        properties: [
+                            new OA\Property(property: 'id', type: 'integer', example: 1),
+                            new OA\Property(property: 'name', type: 'string', example: 'Laptop Dell'),
+                            new OA\Property(property: 'description', type: 'string', example: 'Laptop służbowy'),
+                            new OA\Property(property: 'quantity', type: 'integer', example: 5),
+                            new OA\Property(property: 'price', type: 'number', format: 'float', example: 3999.99),
+                            new OA\Property(property: 'categoryid', type: 'integer', example: 2),
+                            new OA\Property(property: 'category', type: 'string', example: 'Laptopy')
+                        ]
+                    )
+                )
+            )
         ]
     )]
     #[OA\Tag(name: 'Sprzęt')]
-    public function getEquipmentByCategory(string $category, EquipmentRepository $equipmentRepository): JsonResponse
-    {
-        $equipments = $equipmentRepository->findBy(['category' => $category]);
-        return $this->json($equipments, 200);
+    public function getEquipmentByCategory(
+        int $categoryId,
+        EquipmentRepository $equipmentRepository,
+        CategoryRepository $categoryRepository
+    ): JsonResponse {
+        $category = $categoryRepository->find($categoryId);
+        if (!$category) {
+            return $this->json(['error' => 'Kategoria nie znaleziona'], 404);
+        }
+    
+        $equipments = $equipmentRepository->findBy(['categoryId' => $categoryId]);
+    
+        $data = array_map(function ($equipment) use ($category) {
+            return [
+                'id' => $equipment->getId(),
+                'name' => $equipment->getName(),
+                'description' => $equipment->getDescription(),
+                'quantity' => $equipment->getQuantity(),
+                'price' => $equipment->getPrice(),
+                'categoryid' => $equipment->getCategoryId(),
+                'category' => $category->getNazwa(),
+            ];
+        }, $equipments);
+    
+        return $this->json($data, 200);
     }
+    
 
     #[Route('', name: 'add_equipment', methods: ['POST'])]
     #[OA\Post(
