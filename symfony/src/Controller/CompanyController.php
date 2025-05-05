@@ -13,6 +13,8 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 #[Route('/api/company')]
 final class CompanyController extends AbstractController
@@ -83,7 +85,7 @@ final class CompanyController extends AbstractController
     {
         $company = $this->companyService->getById($id);
         if (!$company) {
-            return $this->json(['error' => 'Company not found'], 404);
+            throw new NotFoundHttpException('Company not found');
         }
         return $this->json($company);
     }
@@ -131,14 +133,13 @@ final class CompanyController extends AbstractController
     public function addCompany(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
-
         if (!isset($data['nazwa'], $data['nip'], $data['adres'])) {
-            return $this->json(['error' => 'Missing required fields'], 400);
+            throw new BadRequestHttpException('Missing required fields');
         }
-
         $company = $this->companyService->create($data);
         return $this->json(['message' => 'Company added successfully', 'data' => $company], 201);
     }
+    
 
     #[Route('/{id}', name: 'delete_company', methods: ['DELETE'])]
     #[OA\Delete(
@@ -171,11 +172,8 @@ final class CompanyController extends AbstractController
     #[OA\Tag(name: 'Firma')]
     public function deleteCompany(int $id): JsonResponse
     {
-        $deleted = $this->companyService->delete($id);
-        if (!$deleted) {
-            return $this->json(['error' => 'Company not found'], 404);
-        }
-
+        $this->companyService->delete($id);
         return $this->json(['message' => 'Company deleted successfully']);
     }
+    
 }

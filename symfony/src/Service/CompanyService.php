@@ -5,6 +5,7 @@ namespace App\Service;
 use App\Entity\Company;
 use App\Repository\CompanyRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 readonly class CompanyService
 {
@@ -37,15 +38,14 @@ readonly class CompanyService
         return $company;
     }
 
-    public function delete(int $id): bool
+    public function delete(int $id): void
     {
         $company = $this->companyRepository->find($id);
         if (!$company) {
-            return false;
+            throw new NotFoundHttpException('Company not found');
         }
-
         $this->entityManager->remove($company);
         $this->entityManager->flush();
-        return true;
     }
+    
 }
