@@ -28,7 +28,7 @@ class QuotationController extends AbstractController
                     items: new OA\Items(
                         properties: [
                             new OA\Property(property: 'id', type: 'integer', example: 1),
-                            new OA\Property(property: 'company', type: 'string', example: 'ABC Sp. z o.o.'),
+                            new OA\Property(property: 'company', type: 'integer', example: 1),
                             new OA\Property(property: 'status', type: 'string', example: 'nowa'),
                             new OA\Property(property: 'dane_kontaktowe', type: 'string', example: 'Jan Kowalski, 123-456-789'),
                             new OA\Property(property: 'miejsce', type: 'string', example: 'Warszawa'),
@@ -46,7 +46,7 @@ class QuotationController extends AbstractController
         return $this->json($quotations, 200);
     }
 
-    #[Route('/{id}', name: 'get_quotation_by_id', methods: ['GET'])]
+    #[Route('/{id}', name: 'get_quotation_by_id', methods: ['GET'], requirements: ['id' => '\d+'])]
     #[OA\Get(
         summary: 'Pobierz wycenę po ID',
         parameters: [
@@ -59,7 +59,7 @@ class QuotationController extends AbstractController
                 content: new OA\JsonContent(
                     properties: [
                         new OA\Property(property: 'id', type: 'integer', example: 1),
-                        new OA\Property(property: 'company', type: 'string', example: 'ABC Sp. z o.o.'),
+                        new OA\Property(property: 'company', type: 'integer', example: 1),
                         new OA\Property(property: 'status', type: 'string', example: 'nowa'),
                         new OA\Property(property: 'dane_kontaktowe', type: 'string', example: 'Jan Kowalski, 123-456-789'),
                         new OA\Property(property: 'miejsce', type: 'string', example: 'Warszawa'),
@@ -146,11 +146,14 @@ class QuotationController extends AbstractController
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                required: ['company', 'status', 'dane_kontaktowe', 'miejsce'],
+                required: ['company', 'status', 'dane_kontaktowe', 'data_wystawienia', 'data_poczatek', 'data_koniec', 'miejsce'],
                 properties: [
-                    new OA\Property(property: 'company', type: 'string', example: 'ABC Sp. z o.o.'),
+                    new OA\Property(property: 'company', type: 'integer', example: 1),
                     new OA\Property(property: 'status', type: 'string', example: 'nowa'),
                     new OA\Property(property: 'dane_kontaktowe', type: 'string', example: 'Jan Kowalski, 123-456-789'),
+                    new OA\Property(property: 'data_wystawienia', type: 'string', format: 'date', example: '2025-04-28'),
+                    new OA\Property(property: 'data_poczatek', type: 'string', format: 'date', example: '2025-05-01'),
+                    new OA\Property(property: 'data_koniec', type: 'string', format: 'date', example: '2025-05-03'),
                     new OA\Property(property: 'miejsce', type: 'string', example: 'Warszawa')
                 ]
             )
@@ -165,21 +168,35 @@ class QuotationController extends AbstractController
     {
         $data = json_decode($request->getContent(), true);
 
-        if (!isset($data['company'], $data['status'], $data['dane_kontaktowe'], $data['miejsce'])) {
+        if (!isset(
+            $data['company'],
+            $data['status'],
+            $data['dane_kontaktowe'],
+            $data['miejsce'],
+            $data['data_wystawienia'],
+            $data['data_poczatek'],
+            $data['data_koniec']
+        )) {
             return $this->json(['error' => 'Missing required fields'], 400);
         }
 
-        $quote = new Quote();
-        $quote->setCompany($data['company']);
-        $quote->setStatus($data['status']);
-        $quote->setDaneKontaktowe($data['dane_kontaktowe']);
-        $quote->setMiejsce($data['miejsce']);
-        $quote->setDataWystawienia(new \DateTime());
+        try {
+            $quote = new Quote();
+            $quote->setCompany($data['company']);
+            $quote->setStatus($data['status']);
+            $quote->setDaneKontaktowe($data['dane_kontaktowe']);
+            $quote->setMiejsce($data['miejsce']);
+            $quote->setDataWystawienia(new \DateTime($data['data_wystawienia']));
+            $quote->setDataPoczatek(new \DateTime($data['data_poczatek']));
+            $quote->setDataKoniec(new \DateTime($data['data_koniec']));
 
-        $entityManager->persist($quote);
-        $entityManager->flush();
+            $entityManager->persist($quote);
+            $entityManager->flush();
 
-        return $this->json(['message' => 'Dodano nową wycenę', 'data' => $quote], 201);
+            return $this->json(['message' => 'Dodano nową wycenę', 'data' => $quote], 201);
+        } catch (\Exception $e) {
+            return $this->json(['error' => 'Invalid date or other data'], 400);
+        }
     }
 
     #[Route('/{id}', name: 'delete_quotation', methods: ['DELETE'])]

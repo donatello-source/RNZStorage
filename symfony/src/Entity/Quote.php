@@ -23,8 +23,8 @@ class Quote
     #[ORM\Column(length: 20)]
     private ?string $status = null;
 
-    #[ORM\Column]
-    private ?\DateTimeImmutable $dataWystawienia = null;
+    #[ORM\Column(type: Types::DATE_MUTABLE)]
+    private ?\DateTimeInterface $dataWystawienia = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
     private ?\DateTimeInterface $dataPoczatek = null;
@@ -89,12 +89,12 @@ class Quote
         return $this;
     }
 
-    public function getDataWystawienia(): ?\DateTimeImmutable
+    public function getDataWystawienia(): ?\DateTimeInterface
     {
         return $this->dataWystawienia;
     }
 
-    public function setDataWystawienia(\DateTimeImmutable $dataWystawienia): static
+    public function setDataWystawienia(\DateTimeInterface $dataWystawienia): static
     {
         $this->dataWystawienia = $dataWystawienia;
 

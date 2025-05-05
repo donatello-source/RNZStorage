@@ -25,29 +25,30 @@ class QuoteEquipment
     #[ORM\Column(type: Types::DECIMAL, precision: 5, scale: 2)]
     private ?string $rabat = null;
 
-    public function getIdQuote(): ?int
+    public function getIdQuote(): ?Quote
     {
         return $this->idQuote;
     }
-
-    public function setIdQuote(int $idQuote): static
+    
+    public function setIdQuote(Quote $quote): static
     {
-        $this->idQuote = $idQuote;
-
+        $this->idQuote = $quote;
+    
         return $this;
     }
-
-    public function getIdEquipment(): ?int
+    
+    public function getIdEquipment(): ?Equipment
     {
         return $this->idEquipment;
     }
-
-    public function setIdEquipment(int $idEquipment): static
+    
+    public function setIdEquipment(Equipment $equipment): static
     {
-        $this->idEquipment = $idEquipment;
-
+        $this->idEquipment = $equipment;
+    
         return $this;
     }
+    
 
     public function getIlosc(): ?int
     {
