@@ -5,6 +5,9 @@ namespace App\Controller;
 use App\Entity\Company;
 use App\Repository\CompanyRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use App\Service\CompanyService;
+
+
 use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -14,6 +17,7 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/api/company')]
 final class CompanyController extends AbstractController
 {
+    public function __construct(private readonly CompanyService $companyService) {}
     #[Route('', name: 'company_all', methods: ['GET'])]
     #[OA\Get(
         summary: 'Lista wszystkich firm',
@@ -37,10 +41,9 @@ final class CompanyController extends AbstractController
         ]
     )]
     #[OA\Tag(name: 'Firma')]
-    public function companyAll(CompanyRepository $companyRepository): JsonResponse
+    public function companyAll(): JsonResponse
     {
-        $companies = $companyRepository->findAll();
-        return $this->json($companies, 200);
+        return $this->json($this->companyService->getAll());
     }
 
     #[Route('/{id}', name: 'get_company_by_id', methods: ['GET'])]
@@ -76,13 +79,13 @@ final class CompanyController extends AbstractController
         ]
     )]
     #[OA\Tag(name: 'Firma')]
-    public function getCompanyById(int $id, CompanyRepository $companyRepository): JsonResponse
+    public function getCompanyById(int $id): JsonResponse
     {
-        $company = $companyRepository->find($id);
+        $company = $this->companyService->getById($id);
         if (!$company) {
             return $this->json(['error' => 'Company not found'], 404);
         }
-        return $this->json($company, 200);
+        return $this->json($company);
     }
 
     #[Route('', name: 'add_company', methods: ['POST'])]
@@ -125,7 +128,7 @@ final class CompanyController extends AbstractController
         ]
     )]
     #[OA\Tag(name: 'Firma')]
-    public function addCompany(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    public function addCompany(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
 
@@ -133,15 +136,7 @@ final class CompanyController extends AbstractController
             return $this->json(['error' => 'Missing required fields'], 400);
         }
 
-        $company = new Company();
-        $company->setNazwa($data['nazwa']);
-        $company->setNip($data['nip']);
-        $company->setAdres($data['adres']);
-        $company->setTelefon($data['telefon'] ?? null);
-
-        $entityManager->persist($company);
-        $entityManager->flush();
-
+        $company = $this->companyService->create($data);
         return $this->json(['message' => 'Company added successfully', 'data' => $company], 201);
     }
 
@@ -174,17 +169,13 @@ final class CompanyController extends AbstractController
         ]
     )]
     #[OA\Tag(name: 'Firma')]
-    public function deleteCompany(int $id, CompanyRepository $companyRepository, EntityManagerInterface $entityManager): JsonResponse
+    public function deleteCompany(int $id): JsonResponse
     {
-        $company = $companyRepository->find($id);
-
-        if (!$company) {
+        $deleted = $this->companyService->delete($id);
+        if (!$deleted) {
             return $this->json(['error' => 'Company not found'], 404);
         }
 
-        $entityManager->remove($company);
-        $entityManager->flush();
-
-        return $this->json(['message' => 'Company deleted successfully'], 200);
+        return $this->json(['message' => 'Company deleted successfully']);
     }
 }
