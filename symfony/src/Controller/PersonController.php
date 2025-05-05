@@ -5,6 +5,8 @@ namespace App\Controller;
 use App\Entity\Person;
 use App\Repository\PersonRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use App\Service\PersonService;
+
 use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -14,6 +16,7 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/api/person')]
 final class PersonController extends AbstractController
 {
+    public function __construct(private readonly PersonService $personService) {}
     #[Route('', name: 'person_all', methods: ['GET'])]
     #[OA\Get(
         summary: 'Pobierz wszystkie osoby',
@@ -37,10 +40,9 @@ final class PersonController extends AbstractController
         ]
     )]
     #[OA\Tag(name: 'Osoby')]
-    public function personAll(PersonRepository $personRepository): JsonResponse
+    public function personAll(PersonService $personService): JsonResponse
     {
-        $persons = $personRepository->findAll();
-        return $this->json($persons, 200);
+        return $this->json($personService->getAll(), 200);
     }
 
     #[Route('/{id}', name: 'get_person_by_id', methods: ['GET'])]
@@ -75,9 +77,9 @@ final class PersonController extends AbstractController
         ]
     )]
     #[OA\Tag(name: 'Osoby')]
-    public function getPersonById(int $id, PersonRepository $personRepository): JsonResponse
+    public function getPersonById(int $id, PersonService $personService): JsonResponse
     {
-        $person = $personRepository->find($id);
+        $person = $personService->getById($id);
         if (!$person) {
             return $this->json(['error' => 'Person not found'], 404);
         }
@@ -105,27 +107,18 @@ final class PersonController extends AbstractController
         ]
     )]
     #[OA\Tag(name: 'Osoby')]
-    public function addPerson(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    public function addPerson(Request $request, PersonService $personService): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
-
-        if (!isset($data['imie'], $data['nazwisko'], $data['mail'], $data['haslo'])) {
+        $person = $personService->create($data);
+    
+        if (!$person) {
             return $this->json(['error' => 'Missing required fields'], 400);
         }
-
-        $person = new Person();
-        $person->setImie($data['imie']);
-        $person->setNazwisko($data['nazwisko']);
-        $person->setMail($data['mail']);
-        $person->setHaslo(password_hash($data['haslo'], PASSWORD_BCRYPT));
-        $person->setStanowisko("brak autoryzacji");
-
-        $entityManager->persist($person);
-        $entityManager->flush();
-
+    
         return $this->json(['message' => 'Dodano nową osobę', 'data' => $person], 201);
     }
-
+    
     #[Route('/login', name: 'login_person', methods: ['POST'])]
     #[OA\Post(
         summary: 'Logowanie osoby',
