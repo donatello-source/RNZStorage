@@ -6,6 +6,8 @@ use App\Entity\Equipment;
 use App\Repository\EquipmentRepository;
 use App\Repository\CategoryRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use App\Service\EquipmentService;
+
 use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -15,6 +17,7 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/api/equipment')]
 final class EquipmentController extends AbstractController
 {
+    public function __construct(private readonly EquipmentService $equipmentService) {}
     #[Route('', name: 'equipment_all', methods: ['GET'])]
     #[OA\Get(
         summary: 'Pobiera listę całego sprzętu',
@@ -40,23 +43,9 @@ final class EquipmentController extends AbstractController
         ]
     )]
     #[OA\Tag(name: 'Sprzęt')]
-    public function equipmentAll(EquipmentRepository $equipmentRepository, CategoryRepository $categoryRepository): JsonResponse
+    public function equipmentAll(): JsonResponse
     {
-        $equipments = $equipmentRepository->findAll();
-        $data = array_map(function($equipment) use ($categoryRepository) {
-            $catId = $equipment->getCategoryId();
-            return [
-                'id' => $equipment->getId(),
-                'name' => $equipment->getName(),
-                'description' => $equipment->getDescription(),
-                'quantity' => $equipment->getQuantity(),
-                'price' => $equipment->getPrice(),
-                'categoryid' => $catId,
-                'category' => $catId ? $categoryRepository->find($catId)?->getNazwa() : null,
-            ];
-        }, $equipments);
-
-        return $this->json($data, 200);
+        return $this->json($this->equipmentService->getAll());
     }
 
     #[Route('/{id}', name: 'get_equipment_by_id', methods: ['GET'])]
@@ -94,33 +83,14 @@ final class EquipmentController extends AbstractController
         ]
     )]
     #[OA\Tag(name: 'Sprzęt')]
-    public function getEquipmentById(
-        int $id,
-        EquipmentRepository $equipmentRepository,
-        CategoryRepository $categoryRepository
-    ): JsonResponse {
-        $equipment = $equipmentRepository->find($id);
-
-        if (!$equipment) {
-            return $this->json(['error' => 'Sprzęt nie znaleziony'], 404);
-        }
-
-        $category = $equipment->getCategoryId()
-            ? $categoryRepository->find($equipment->getCategoryId())?->getNazwa()
-            : null;
-
-        $data = [
-            'id' => $equipment->getId(),
-            'name' => $equipment->getName(),
-            'description' => $equipment->getDescription(),
-            'quantity' => $equipment->getQuantity(),
-            'price' => $equipment->getPrice(),
-            'categoryid' => $equipment->getCategoryId(),
-            'category' => $category
-        ];
-
-        return $this->json($data, 200);
+    public function getEquipmentById(int $id): JsonResponse
+    {
+        $equipment = $this->equipmentService->getById($id);
+        return $equipment
+            ? $this->json($equipment)
+            : $this->json(['error' => 'Sprzęt nie znaleziony'], 404);
     }
+
 
 
     #[Route('/category/{categoryId}', name: 'get_equipment_by_category', methods: ['GET'])]
@@ -151,31 +121,12 @@ final class EquipmentController extends AbstractController
         ]
     )]
     #[OA\Tag(name: 'Sprzęt')]
-    public function getEquipmentByCategory(
-        int $categoryId,
-        EquipmentRepository $equipmentRepository,
-        CategoryRepository $categoryRepository
-    ): JsonResponse {
-        $category = $categoryRepository->find($categoryId);
-        if (!$category) {
-            return $this->json(['error' => 'Kategoria nie znaleziona'], 404);
-        }
-    
-        $equipments = $equipmentRepository->findBy(['categoryId' => $categoryId]);
-    
-        $data = array_map(function ($equipment) use ($category) {
-            return [
-                'id' => $equipment->getId(),
-                'name' => $equipment->getName(),
-                'description' => $equipment->getDescription(),
-                'quantity' => $equipment->getQuantity(),
-                'price' => $equipment->getPrice(),
-                'categoryid' => $equipment->getCategoryId(),
-                'category' => $category->getNazwa(),
-            ];
-        }, $equipments);
-    
-        return $this->json($data, 200);
+    public function getEquipmentByCategory(int $categoryId): JsonResponse
+    {
+        $equipment = $this->equipmentService->getByCategory($categoryId);
+        return $equipment
+            ? $this->json($equipment)
+            : $this->json(['error' => 'Kategoria nie znaleziona'], 404);
     }
     
 
@@ -201,24 +152,15 @@ final class EquipmentController extends AbstractController
         ]
     )]
     #[OA\Tag(name: 'Sprzęt')]
-    public function addEquipment(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    public function addEquipment(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
-
+    
         if (!isset($data['name'], $data['quantity'], $data['price'])) {
             return $this->json(['error' => 'Missing required fields'], 400);
         }
-
-        $equipment = new Equipment();
-        $equipment->setName($data['name']);
-        $equipment->setDescription($data['description'] ?? null);
-        $equipment->setQuantity($data['quantity']);
-        $equipment->setPrice($data['price']);
-        $equipment->setCategoryId($data['categoryid'] ?? null);
-
-        $entityManager->persist($equipment);
-        $entityManager->flush();
-
+    
+        $equipment = $this->equipmentService->create($data);
         return $this->json(['message' => 'Dodano nowy sprzęt', 'data' => $equipment], 201);
     }
 
@@ -246,34 +188,14 @@ final class EquipmentController extends AbstractController
         ]
     )]
     #[OA\Tag(name: 'Sprzęt')]
-    public function editEquipment(int $id, Request $request, EquipmentRepository $equipmentRepository, EntityManagerInterface $entityManager): JsonResponse
+    public function editEquipment(int $id, Request $request): JsonResponse
     {
-        $equipment = $equipmentRepository->find($id);
-        if (!$equipment) {
-            return $this->json(['error' => 'Item not found'], 404);
-        }
-
         $data = json_decode($request->getContent(), true);
-
-        if (isset($data['name'])) {
-            $equipment->setName($data['name']);
-        }
-        if (isset($data['description'])) {
-            $equipment->setDescription($data['description']);
-        }
-        if (isset($data['quantity'])) {
-            $equipment->setQuantity($data['quantity']);
-        }
-        if (isset($data['price'])) {
-            $equipment->setPrice($data['price']);
-        }
-        if (isset($data['categoryid'])) {
-            $equipment->setCategoryId($data['categoryid']);
-        }
-
-        $entityManager->flush();
-
-        return $this->json(['message' => 'Sprzęt został zaktualizowany', 'data' => $equipment], 200);
+        $equipment = $this->equipmentService->update($id, $data);
+    
+        return $equipment
+            ? $this->json(['message' => 'Sprzęt został zaktualizowany', 'data' => $equipment])
+            : $this->json(['error' => 'Item not found'], 404);
     }
 
     #[Route('/{id}', name: 'delete_equipment', methods: ['DELETE'])]
@@ -288,16 +210,10 @@ final class EquipmentController extends AbstractController
         ]
     )]
     #[OA\Tag(name: 'Sprzęt')]
-    public function deleteEquipment(int $id, EquipmentRepository $equipmentRepository, EntityManagerInterface $entityManager): JsonResponse
+    public function deleteEquipment(int $id): JsonResponse
     {
-        $equipment = $equipmentRepository->find($id);
-        if (!$equipment) {
-            return $this->json(['error' => 'Item not found'], 404);
-        }
-
-        $entityManager->remove($equipment);
-        $entityManager->flush();
-
-        return $this->json(['message' => 'Sprzęt został usunięty'], 200);
+        return $this->equipmentService->delete($id)
+            ? $this->json(['message' => 'Sprzęt został usunięty'])
+            : $this->json(['error' => 'Sprzęt nie znaleziony'], 404);
     }
 }

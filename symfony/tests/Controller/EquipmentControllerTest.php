@@ -73,6 +73,7 @@ class EquipmentControllerTest extends WebTestCase
         $category = new Category();
         $category->setNazwa('Drukarki');
         $this->entityManager->persist($category);
+        $this->entityManager->flush();
 
         $equipment = new Equipment();
         $equipment->setName('HP DeskJet');
