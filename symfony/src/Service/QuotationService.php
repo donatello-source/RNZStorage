@@ -7,6 +7,9 @@ use App\Repository\QuoteRepository;
 use App\Repository\QuoteEquipmentRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+
 class QuotationService
 {
     public function __construct(
@@ -20,9 +23,13 @@ class QuotationService
         return $this->quoteRepository->findAll();
     }
 
-    public function getQuoteById(int $id): ?Quote
+    public function getQuoteById(int $id): Quote
     {
-        return $this->quoteRepository->find($id);
+        $quote = $this->quoteRepository->find($id);
+        if (!$quote) {
+            throw new NotFoundHttpException('Quotation not found');
+        }
+        return $quote;
     }
 
     public function getAllQuoteEquipment(): array
@@ -30,12 +37,16 @@ class QuotationService
         return $this->quoteEquipmentRepository->findAll();
     }
 
-    public function getQuoteEquipmentById(int $id): mixed
+    public function getQuoteEquipmentById(int $id): object
     {
-        return $this->quoteEquipmentRepository->find($id);
+        $equipment = $this->quoteEquipmentRepository->find($id);
+        if (!$equipment) {
+            throw new NotFoundHttpException('Item not found in quotation');
+        }
+        return $equipment;
     }
 
-    public function addQuote(array $data): array
+    public function addQuote(array $data): Quote
     {
         if (!isset(
             $data['company'],
@@ -46,7 +57,7 @@ class QuotationService
             $data['data_poczatek'],
             $data['data_koniec']
         )) {
-            return ['error' => 'Missing required fields', 'status' => 400];
+            throw new BadRequestHttpException('Missing required fields');
         }
 
         try {
@@ -62,22 +73,20 @@ class QuotationService
             $this->entityManager->persist($quote);
             $this->entityManager->flush();
 
-            return ['data' => $quote, 'status' => 201];
+            return $quote;
         } catch (\Exception $e) {
-            return ['error' => 'Invalid date or other data', 'status' => 400];
+            throw new BadRequestHttpException('Invalid date or other data');
         }
     }
 
-    public function deleteQuote(int $id): array
+    public function deleteQuote(int $id): void
     {
         $quote = $this->quoteRepository->find($id);
         if (!$quote) {
-            return ['error' => 'Quotation not found', 'status' => 404];
+            throw new NotFoundHttpException('Quotation not found');
         }
 
         $this->entityManager->remove($quote);
         $this->entityManager->flush();
-
-        return ['message' => 'Wycena została usunięta', 'status' => 200];
     }
 }

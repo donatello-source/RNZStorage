@@ -77,9 +77,6 @@ class QuotationController extends AbstractController
     public function getQuotationById(int $id): JsonResponse
     {
         $quote = $this->quotationService->getQuoteById($id);
-        if (!$quote) {
-            return $this->json(['error' => 'Quotation not found'], 404);
-        }
         return $this->json($quote, 200);
     }
 
@@ -136,9 +133,6 @@ class QuotationController extends AbstractController
     public function getQuotationEquipmentById(int $id): JsonResponse
     {
         $equipment = $this->quotationService->getQuoteEquipmentById($id);
-        if (!$equipment) {
-            return $this->json(['error' => 'Item not found in quotation'], 404);
-        }
         return $this->json($equipment, 200);
     }
 
@@ -169,13 +163,8 @@ class QuotationController extends AbstractController
     public function addQuotation(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
-        $result = $this->quotationService->addQuote($data);
-
-        if (isset($result['error'])) {
-            return $this->json(['error' => $result['error']], $result['status']);
-        }
-
-        return $this->json(['message' => 'Dodano nową wycenę', 'data' => $result['data']], $result['status']);
+        $quote = $this->quotationService->addQuote($data);
+        return $this->json(['message' => 'Dodano nową wycenę', 'data' => $quote], 201);
     }
 
     #[Route('/{id}', name: 'delete_quotation', methods: ['DELETE'])]
@@ -192,11 +181,7 @@ class QuotationController extends AbstractController
     #[OA\Tag(name: 'Wyceny')]
     public function deleteQuotation(int $id): JsonResponse
     {
-        $result = $this->quotationService->deleteQuote($id);
-
-        return $this->json(
-            isset($result['error']) ? ['error' => $result['error']] : ['message' => $result['message']],
-            $result['status']
-        );
+        $this->quotationService->deleteQuote($id);
+        return $this->json(['message' => 'Wycena została usunięta'], 200);
     }
 }
