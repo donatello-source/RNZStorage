@@ -5,7 +5,9 @@ services:
         autowire: true
         autoconfigure: true
         public: false
-
+    App\EventListener\ExceptionListener:
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception }
     App\:
         resource: '../src/'
         exclude:

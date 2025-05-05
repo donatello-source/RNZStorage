@@ -11,6 +11,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 
 use OpenApi\Attributes as OA;
@@ -83,7 +84,7 @@ final class CategoryController extends AbstractController
         $data = json_decode($request->getContent(), true);
 
         if (!isset($data['nazwa'])) {
-            return $this->json(['error' => 'Missing required field: nazwa'], 400);
+            throw new BadRequestHttpException('Missing required field: nazwa');
         }
 
         $category = $this->categoryService->add($data['nazwa']);
@@ -124,11 +125,7 @@ final class CategoryController extends AbstractController
     #[OA\Tag(name: 'Kategorie')]
     public function deleteCategory(int $id): JsonResponse
     {
-        try {
-            $this->categoryService->delete($id);
-            return $this->json(['message' => 'Kategoria została usunięta'], 200);
-        } catch (\RuntimeException $e) {
-            return $this->json(['error' => $e->getMessage()], 404);
-        }
+        $this->categoryService->delete($id);
+        return $this->json(['message' => 'Kategoria została usunięta'], 200);
     }
 }

@@ -33,7 +33,7 @@ class CategoryService
     {
         $category = $this->categoryRepository->find($id);
         if (!$category) {
-            throw new \RuntimeException('Kategoria nie została znaleziona');
+            throw new NotFoundHttpException('Kategoria nie została znaleziona');
         }
 
         $this->entityManager->remove($category);
