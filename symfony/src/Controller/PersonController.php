@@ -12,6 +12,9 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\Security\Core\Exception\AuthenticationException;
 
 #[Route('/api/person')]
 final class PersonController extends AbstractController
@@ -77,14 +80,17 @@ final class PersonController extends AbstractController
         ]
     )]
     #[OA\Tag(name: 'Osoby')]
-    public function getPersonById(int $id, PersonService $personService): JsonResponse
+    public function getPersonById(int $id): JsonResponse
     {
-        $person = $personService->getById($id);
+        $person = $this->personService->getById($id);
+    
         if (!$person) {
-            return $this->json(['error' => 'Person not found'], 404);
+            throw new NotFoundHttpException('Osoba nie znaleziona');
         }
-        return $this->json($person, 200);
+    
+        return $this->json($person);
     }
+    
 
     #[Route('', name: 'add_person', methods: ['POST'])]
     #[OA\Post(
@@ -107,17 +113,14 @@ final class PersonController extends AbstractController
         ]
     )]
     #[OA\Tag(name: 'Osoby')]
-    public function addPerson(Request $request, PersonService $personService): JsonResponse
+    public function addPerson(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
-        $person = $personService->create($data);
-    
-        if (!$person) {
-            return $this->json(['error' => 'Missing required fields'], 400);
-        }
+        $person = $this->personService->create($data);
     
         return $this->json(['message' => 'Dodano nową osobę', 'data' => $person], 201);
     }
+    
     
     #[Route('/login', name: 'login_person', methods: ['POST'])]
     #[OA\Post(
@@ -139,22 +142,13 @@ final class PersonController extends AbstractController
         ]
     )]
     #[OA\Tag(name: 'Osoby')]
-    public function loginPerson(Request $request, PersonRepository $personRepository): JsonResponse
+    public function loginPerson(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
-
-        if (!isset($data['mail'], $data['haslo'])) {
-            return $this->json(['error' => 'Missing email or password'], 400);
-        }
-
-        $person = $personRepository->findOneBy(['mail' => $data['mail']]);
-
-        if (!$person || !password_verify($data['haslo'], $person->getHaslo())) {
-            return $this->json(['error' => 'Invalid email or password'], 401);
-        }
-
+        $person = $this->personService->login($data);
+    
         // TODO: JWT Token logic
-
-        return $this->json(['message' => 'Logged in successfully', 'data' => $person], 200);
+        return $this->json(['message' => 'Zalogowano pomyślnie', 'data' => $person]);
     }
+    
 }

@@ -5,6 +5,8 @@ namespace App\Service;
 use App\Entity\Person;
 use App\Repository\PersonRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\Security\Core\Exception\AuthenticationException;
 
 class PersonService
 {
@@ -26,7 +28,7 @@ class PersonService
     public function create(array $data): ?Person
     {
         if (!isset($data['imie'], $data['nazwisko'], $data['mail'], $data['haslo'])) {
-            return null;
+            throw new BadRequestHttpException('Brak wymaganych pól');
         }
 
         $person = new Person();
@@ -42,17 +44,17 @@ class PersonService
         return $person;
     }
 
-    // public function login(array $data): ?Person
-    // {
-    //     if (!isset($data['mail'], $data['haslo'])) {
-    //         return null;
-    //     }
+    public function login(array $data): Person
+    {
+        if (!isset($data['mail'], $data['haslo'])) {
+            throw new BadRequestHttpException('Brak adresu e-mail lub hasła');
+        }
 
-    //     $person = $this->personRepository->findOneBy(['mail' => $data['mail']]);
-    //     if (!$person || !password_verify($data['haslo'], $person->getHaslo())) {
-    //         return null;
-    //     }
+        $person = $this->personRepository->findOneBy(['mail' => $data['mail']]);
+        if (!$person || !password_verify($data['haslo'], $person->getHaslo())) {
+            throw new AuthenticationException('Nieprawidłowy email lub hasło');
+        }
 
-    //     return $person;
-    // }
+        return $person;
+    }
 }
