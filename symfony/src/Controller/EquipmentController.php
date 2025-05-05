@@ -13,6 +13,8 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 #[Route('/api/equipment')]
 final class EquipmentController extends AbstractController
@@ -86,10 +88,12 @@ final class EquipmentController extends AbstractController
     public function getEquipmentById(int $id): JsonResponse
     {
         $equipment = $this->equipmentService->getById($id);
-        return $equipment
-            ? $this->json($equipment)
-            : $this->json(['error' => 'Sprzęt nie znaleziony'], 404);
+        if (!$equipment) {
+            throw new NotFoundHttpException('Sprzęt nie znaleziony');
+        }
+        return $this->json($equipment);
     }
+    
 
 
 
@@ -124,10 +128,12 @@ final class EquipmentController extends AbstractController
     public function getEquipmentByCategory(int $categoryId): JsonResponse
     {
         $equipment = $this->equipmentService->getByCategory($categoryId);
-        return $equipment
-            ? $this->json($equipment)
-            : $this->json(['error' => 'Kategoria nie znaleziona'], 404);
+        if (!$equipment) {
+            throw new NotFoundHttpException('Kategoria nie znaleziona');
+        }
+        return $this->json($equipment);
     }
+    
     
 
     #[Route('', name: 'add_equipment', methods: ['POST'])]
@@ -157,12 +163,13 @@ final class EquipmentController extends AbstractController
         $data = json_decode($request->getContent(), true);
     
         if (!isset($data['name'], $data['quantity'], $data['price'])) {
-            return $this->json(['error' => 'Missing required fields'], 400);
+            throw new BadRequestHttpException('Brak wymaganych pól');
         }
     
         $equipment = $this->equipmentService->create($data);
         return $this->json(['message' => 'Dodano nowy sprzęt', 'data' => $equipment], 201);
     }
+    
 
     #[Route('/{id}', name: 'edit_equipment', methods: ['PUT'])]
     #[OA\Put(
@@ -193,10 +200,13 @@ final class EquipmentController extends AbstractController
         $data = json_decode($request->getContent(), true);
         $equipment = $this->equipmentService->update($id, $data);
     
-        return $equipment
-            ? $this->json(['message' => 'Sprzęt został zaktualizowany', 'data' => $equipment])
-            : $this->json(['error' => 'Item not found'], 404);
+        if (!$equipment) {
+            throw new NotFoundHttpException('Sprzęt nie znaleziony');
+        }
+    
+        return $this->json(['message' => 'Sprzęt został zaktualizowany', 'data' => $equipment]);
     }
+    
 
     #[Route('/{id}', name: 'delete_equipment', methods: ['DELETE'])]
     #[OA\Delete(
@@ -212,8 +222,11 @@ final class EquipmentController extends AbstractController
     #[OA\Tag(name: 'Sprzęt')]
     public function deleteEquipment(int $id): JsonResponse
     {
-        return $this->equipmentService->delete($id)
-            ? $this->json(['message' => 'Sprzęt został usunięty'])
-            : $this->json(['error' => 'Sprzęt nie znaleziony'], 404);
+        if (!$this->equipmentService->delete($id)) {
+            throw new NotFoundHttpException('Sprzęt nie znaleziony');
+        }
+    
+        return $this->json(['message' => 'Sprzęt został usunięty']);
     }
+    
 }
