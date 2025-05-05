@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Category;
 use App\Repository\CategoryRepository;
+use App\Service\CategoryService;
 use Doctrine\ORM\EntityManagerInterface;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -11,11 +12,14 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 
+
 use OpenApi\Attributes as OA;
 
 #[OA\Tag(name: 'Kategorie')]
 final class CategoryController extends AbstractController
 {
+    public function __construct(private readonly CategoryService $categoryService) {}
+
     #[Route('/api/category', name: 'category_all', methods: ['GET'])]
     #[OA\Get(
         summary: 'Lista wszystkich kategorii',
@@ -36,9 +40,9 @@ final class CategoryController extends AbstractController
         ]
     )]
     #[OA\Tag(name: 'Kategorie')]
-    public function categoryAll(CategoryRepository $categoryRepository): JsonResponse
+    public function categoryAll(): JsonResponse
     {
-        $categories = $categoryRepository->findAll();
+        $categories = $this->categoryService->getAll();
         return $this->json($categories, 200, [], ['groups' => ['category:read']]);
     }
 
@@ -74,7 +78,7 @@ final class CategoryController extends AbstractController
         ]
     )]
     #[OA\Tag(name: 'Kategorie')]
-    public function addCategory(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    public function addCategory(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
 
@@ -82,14 +86,11 @@ final class CategoryController extends AbstractController
             return $this->json(['error' => 'Missing required field: nazwa'], 400);
         }
 
-        $category = new Category();
-        $category->setNazwa($data['nazwa']);
-
-        $entityManager->persist($category);
-        $entityManager->flush();
+        $category = $this->categoryService->add($data['nazwa']);
 
         return $this->json($category, 201, [], ['groups' => ['category:read']]);
     }
+
 
     #[Route('/api/category/{id}', name: 'delete_category', methods: ['DELETE'])]
     #[OA\Delete(
@@ -121,17 +122,13 @@ final class CategoryController extends AbstractController
         ]
     )]
     #[OA\Tag(name: 'Kategorie')]
-    public function deleteCategory(int $id, CategoryRepository $categoryRepository, EntityManagerInterface $entityManager): JsonResponse
+    public function deleteCategory(int $id): JsonResponse
     {
-        $category = $categoryRepository->find($id);
-
-        if (!$category) {
-            return $this->json(['error' => 'Kategoria nie została znaleziona'], 404);
+        try {
+            $this->categoryService->delete($id);
+            return $this->json(['message' => 'Kategoria została usunięta'], 200);
+        } catch (\RuntimeException $e) {
+            return $this->json(['error' => $e->getMessage()], 404);
         }
-
-        $entityManager->remove($category);
-        $entityManager->flush();
-
-        return $this->json(['message' => 'Kategoria została usunięta'], 200);
     }
 }
