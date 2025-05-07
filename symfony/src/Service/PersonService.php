@@ -44,17 +44,17 @@ class PersonService
         return $person;
     }
 
-    public function login(array $data): Person
-    {
-        if (!isset($data['mail'], $data['haslo'])) {
-            throw new BadRequestHttpException('Brak adresu e-mail lub hasła');
-        }
+    // public function login(array $data): Person
+    // {
+    //     if (!isset($data['mail'], $data['haslo'])) {
+    //         throw new BadRequestHttpException('Brak adresu e-mail lub hasła');
+    //     }
 
-        $person = $this->personRepository->findOneBy(['mail' => $data['mail']]);
-        if (!$person || !password_verify($data['haslo'], $person->getHaslo())) {
-            throw new AuthenticationException('Nieprawidłowy email lub hasło');
-        }
+    //     $person = $this->personRepository->findOneBy(['mail' => $data['mail']]);
+    //     if (!$person || !password_verify($data['haslo'], $person->getHaslo())) {
+    //         throw new AuthenticationException('Nieprawidłowy email lub hasło');
+    //     }
 
-        return $person;
-    }
+    //     return $person;
+    // }
 }

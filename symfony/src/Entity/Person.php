@@ -4,9 +4,11 @@ namespace App\Entity;
 
 use App\Repository\PersonRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
 #[ORM\Entity(repositoryClass: PersonRepository::class)]
-class Person
+class Person implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -98,5 +100,28 @@ class Person
         $this->stanowisko = $stanowisko;
 
         return $this;
+    }
+
+    public function getUserIdentifier(): string
+    {
+        return $this->mail;
+    }
+
+    public function getPassword(): string
+    {
+        return $this->haslo;
+    }
+
+    public function getRoles(): array
+    {
+        return match ($this->stanowisko) {
+            'ROLE_ADMIN', 'ROLE_USER' => [$this->stanowisko],
+            default => ['ROLE_UNVERIFIED'],
+        };
+    }
+
+    public function eraseCredentials(): void
+    {
+        // No sensitive temporary data
     }
 }

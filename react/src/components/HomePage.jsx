@@ -26,18 +26,17 @@ const HomePage = () => {
     fetchData();
 
     const storedUser = JSON.parse(localStorage.getItem('user'));
-    const token = localStorage.getItem('token');
 
-    if (!storedUser || !token) {
+    if (!storedUser) {
       navigate('/');
     } else {
       setUser(storedUser);
     }
   }, [navigate]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     localStorage.removeItem('user');
-    localStorage.removeItem('token');
+    document.cookie = 'PHPSESSID=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
     navigate('/');
   };
   

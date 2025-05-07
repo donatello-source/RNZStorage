@@ -2,8 +2,16 @@ import React, { useState } from 'react';
 import { Button, TextField, Snackbar, Alert } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import '../style/LoginForm.css';
+import { useEffect } from 'react';
+
 
 function LoginForm() {
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user) {
+      navigate('/home');
+    }
+  }, []);
   const navigate = useNavigate();
   const [isRegistering, setIsRegistering] = useState(false);
   const [email, setEmail] = useState('');
@@ -16,17 +24,6 @@ function LoginForm() {
 
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
-  };
-  
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-
-  const handleAddOpen = () => setIsAddModalOpen(true);
-  const handleAddClose = () => setIsAddModalOpen(false);
-  
-  const handleAddEquipment = (newEquipment) => {
-    console.log('Nowy sprzęt:', newEquipment);
-    // Tutaj dodasz fetch() do API -> POST na `/api/equipment`
-    handleAddClose();
   };
 
   const handleSubmit = async (e) => {
@@ -60,6 +57,7 @@ function LoginForm() {
         });
         if (response.ok) {
           setIsRegistering(false);
+          
           setSnackbar({ open: true, message: 'Rejestracja zakończona sukcesem!', severity: 'success' });
         }
       } else {
@@ -68,11 +66,12 @@ function LoginForm() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ mail: email, haslo: password }),
         });
+
         const data = await response.json();
         if (response.ok) {
+          console.log(data);
           setSnackbar({ open: true, message: `Witaj ${data.data.imie} ${data.data.nazwisko}!`, severity: 'success' });
           localStorage.setItem('user', JSON.stringify(data.data));
-          localStorage.setItem('token', data.token);
           setTimeout(() => navigate('/home'), 1000);
         } else {
           setSnackbar({ open: true, message: 'Niepoprawny login i/lub hasło', severity: 'error' });

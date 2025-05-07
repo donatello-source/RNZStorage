@@ -8,6 +8,9 @@ services:
     App\EventListener\ExceptionListener:
         tags:
             - { name: kernel.event_listener, event: kernel.exception }
+    App\EventListener\LogoutSuccessListener:
+        tags:
+            - { name: kernel.event_listener, event: Symfony\Component\Security\Http\Event\LogoutEvent, method: onLogoutSuccess }
     App\:
         resource: '../src/'
         exclude:
