@@ -14,6 +14,15 @@ const HomePage = () => {
   const [isAdding, setIsAdding] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
 
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem('user'));
+  
+    if (!storedUser) {
+      navigate('/');
+    } else if (storedUser.role.includes('ROLE_ADMIN')) {
+      navigate('/admin');
+    }
+  }, [navigate]);
   
   useEffect(() => {
     const fetchData = async () => {

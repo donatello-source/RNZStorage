@@ -30,6 +30,7 @@ security:
             stateless: false
 
     access_control:
+        - { path: ^/api/doc, roles: PUBLIC_ACCESS }
         - { path: ^/api/person/login, roles: IS_AUTHENTICATED_ANONYMOUSLY }
         - { path: ^/api/person/logout, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/admin, roles: ROLE_ADMIN }

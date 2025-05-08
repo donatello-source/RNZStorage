@@ -72,7 +72,14 @@ function LoginForm() {
           console.log(data);
           setSnackbar({ open: true, message: `Witaj ${data.data.imie} ${data.data.nazwisko}!`, severity: 'success' });
           localStorage.setItem('user', JSON.stringify(data.data));
-          setTimeout(() => navigate('/home'), 1000);
+          console.log(data.data);
+          setTimeout(() => {
+            if (data.data.role.includes('ROLE_ADMIN')) {
+              navigate('/admin');
+            } else {
+              navigate('/home');
+            }
+          }, 1000);
         } else {
           setSnackbar({ open: true, message: 'Niepoprawny login i/lub hasło', severity: 'error' });
         }

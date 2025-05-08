@@ -124,4 +124,14 @@ class Person implements UserInterface, PasswordAuthenticatedUserInterface
     {
         // No sensitive temporary data
     }
+    public function setRoles(array $roles): static
+{
+    if (count($roles) !== 1) {
+        throw new \InvalidArgumentException('Użytkownik może mieć tylko jedną rolę.');
+    }
+
+    $this->stanowisko = $roles[0];
+
+    return $this;
+}
 }

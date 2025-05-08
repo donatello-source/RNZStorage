@@ -1,21 +1,26 @@
-parameters:
-
 services:
     _defaults:
         autowire: true
         autoconfigure: true
         public: false
+
     App\EventListener\ExceptionListener:
         tags:
             - { name: kernel.event_listener, event: kernel.exception }
+
     App\EventListener\LogoutSuccessListener:
         tags:
             - { name: kernel.event_listener, event: Symfony\Component\Security\Http\Event\LogoutEvent, method: onLogoutSuccess }
+
     App\:
         resource: '../src/'
         exclude:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
             - '../src/Kernel.php'
+
+    App\Controller\:
+        resource: '../src/Controller'
+        tags: ['controller.service_arguments']
 
     Doctrine\ORM\EntityManagerInterface: '@doctrine.orm.entity_manager'
