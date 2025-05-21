@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y \
     rm -rf /var/lib/apt/lists/*
 
 
+RUN docker-php-ext-install opcache
 
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
@@ -22,4 +23,4 @@ WORKDIR /var/www/symfony
 
 COPY . /var/www/symfony
 
-RUN composer install --ignore-platform-reqs
+RUN composer install --no-interaction --prefer-dist

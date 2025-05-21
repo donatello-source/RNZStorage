@@ -8,7 +8,9 @@ const EquipmentModal = ({ open, onClose, equipment, onSave }) => {
     description: '',
     quantity: '',
     price: '',
-    categoryid: ''
+    categoryid: '',
+    additional_info: '',
+    pricing_info: ''
   });
 
   const [categories, setCategories] = useState([]);
@@ -35,7 +37,9 @@ const EquipmentModal = ({ open, onClose, equipment, onSave }) => {
         description: equipment.description || '',
         quantity: equipment.quantity || '',
         price: equipment.price || '',
-        categoryid: equipment.categoryid || ''
+        categoryid: equipment.categoryid || '',
+        additional_info: equipment.additional_info || '',
+        pricing_info: equipment.pricing_info || ''
       });
     }
   }, [equipment]);
@@ -45,6 +49,7 @@ const EquipmentModal = ({ open, onClose, equipment, onSave }) => {
   };
 
   const handleSave = async () => {
+    console.log(formData);
     const url = formData.id ? `/api/equipment/${formData.id}` : '/api/equipment';
     const method = formData.id ? 'PUT' : 'POST';
   
@@ -77,6 +82,8 @@ const EquipmentModal = ({ open, onClose, equipment, onSave }) => {
         <TextField label="Opis" fullWidth margin="normal" name="description" value={formData.description} onChange={handleChange} />
         <TextField label="Ilość" fullWidth margin="normal" name="quantity" type="number" value={formData.quantity} onChange={handleChange} />
         <TextField label="Cena" fullWidth margin="normal" name="price" type="number" value={formData.price} onChange={handleChange} />
+        <TextField label="Informacje Dodatkowe" fullWidth margin="normal" name="additional_info" value={formData.additional_info} onChange={handleChange} />
+        <TextField label="Informacje do Wyceny" fullWidth margin="normal" name="pricing_info" value={formData.pricing_info} onChange={handleChange} />
         
         {/* Select do wyboru kategorii */}
         <TextField

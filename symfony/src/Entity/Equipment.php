@@ -29,6 +29,12 @@ class Equipment
     #[ORM\Column(name: "idkategoria", type: "integer", nullable: true)]
     private ?int $categoryId = null;
 
+    #[ORM\Column(name: "informacje_wycena", type: "text", nullable: true)]
+    private ?string $pricingInfo = null;
+
+    #[ORM\Column(name: "informacje_dodatkowe", type: "text", nullable: true)]
+    private ?string $additionalInfo = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -88,4 +94,27 @@ class Equipment
         $this->categoryId = $categoryId;
         return $this;
     }
+    
+    public function getPricingInfo(): ?string
+    {
+        return $this->pricingInfo;
+    }
+
+    public function setPricingInfo(?string $pricingInfo): static
+    {
+        $this->pricingInfo = $pricingInfo;
+        return $this;
+    }
+
+    public function getAdditionalInfo(): ?string
+    {
+        return $this->additionalInfo;
+    }
+
+    public function setAdditionalInfo(?string $additionalInfo): static
+    {
+        $this->additionalInfo = $additionalInfo;
+        return $this;
+    }
+
 }

@@ -5,6 +5,7 @@ import NavMenu from './NavMenu';
 import Header from './Header';
 import EquipmentModal from './EquipmentModal';
 import { useNavigate } from 'react-router-dom';
+import CircularProgress from '@mui/material/CircularProgress';
 import '../style/HomePage.css';
 
 const HomePage = () => {
@@ -13,8 +14,10 @@ const HomePage = () => {
   const navigate = useNavigate();
   const [isAdding, setIsAdding] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
+    
+ useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem('user'));
   
     if (!storedUser) {
@@ -26,10 +29,18 @@ const HomePage = () => {
   
   useEffect(() => {
     const fetchData = async () => {
-      const response = await fetch('/api/equipment');
-      const data = await response.json();
-      console.log(data);
-      setEquipments(data);
+      setIsLoading(true);
+      try {
+        const response = await fetch('/api/equipment', {
+          credentials: 'include'
+        });
+        const data = await response.json();
+        setEquipments(data);
+      } catch (error) {
+        console.error('Błąd podczas pobierania danych:', error);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     fetchData();
@@ -43,16 +54,26 @@ const HomePage = () => {
     }
   }, [navigate]);
 
+
   const handleLogout = async () => {
     localStorage.removeItem('user');
     document.cookie = 'PHPSESSID=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
     navigate('/');
   };
-  
+
   const refreshEquipment = async () => {
-    const response = await fetch('/api/equipment');
+  setIsLoading(true);
+  try {
+    const response = await fetch('/api/equipment', {
+      credentials: 'include'
+    });
     const data = await response.json();
     setEquipments(data);
+  } catch (error) {
+    console.error('Błąd podczas pobierania danych:', error);
+  } finally {
+    setIsLoading(false);
+  }
   };
 
   const handleAddClick = () => {
@@ -83,13 +104,19 @@ const HomePage = () => {
               Wyloguj się
             </Button>
           </Box>
-          <Grid container spacing={3} className="equipment-grid">
-            {equipments.map((equipment) => (
-              <Grid item xs={12} sm={6} md={4} key={equipment.id}>
-                <EquipmentCard equipment={equipment} />
+            {isLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', my: 5 }}>
+              <CircularProgress />
+            </Box>
+            ) : (
+              <Grid container spacing={3} className="equipment-grid">
+                {equipments.map((equipment) => (
+                  <Grid item xs={12} sm={6} md={4} key={equipment.id}>
+                    <EquipmentCard equipment={equipment} />
+                  </Grid>
+                ))}
               </Grid>
-            ))}
-          </Grid>
+            )}
           <Button
             variant="contained"
             color="primary"

@@ -37,7 +37,8 @@ final class EquipmentController extends AbstractController
                             new OA\Property(property: 'quantity', type: 'integer', example: 5),
                             new OA\Property(property: 'price', type: 'number', format: 'float', example: 3999.99),
                             new OA\Property(property: 'categoryid', type: 'integer', example: 2),
-                            new OA\Property(property: 'category', type: 'string', example: 'Laptopy')
+                            new OA\Property(property: 'additionalInfo', type: 'string', example: "Magazyn A2 -> 12"),
+                            new OA\Property(property: 'pricingInfo', type: 'string', example: "Do laptopa dołaczony jest kabel zasilania")
                         ]
                     )
                 )
@@ -74,7 +75,8 @@ final class EquipmentController extends AbstractController
                         new OA\Property(property: 'quantity', type: 'integer', example: 5),
                         new OA\Property(property: 'price', type: 'number', format: 'float', example: 3999.99),
                         new OA\Property(property: 'categoryid', type: 'integer', example: 2),
-                        new OA\Property(property: 'category', type: 'string', example: 'Laptopy')
+                        new OA\Property(property: 'additionalInfo', type: 'string', example: "Magazyn A2 -> 12"),
+                        new OA\Property(property: 'pricingInfo', type: 'string', example: "Do laptopa dołaczony jest kabel zasilania")
                     ]
                 )
             ),
@@ -117,7 +119,8 @@ final class EquipmentController extends AbstractController
                             new OA\Property(property: 'quantity', type: 'integer', example: 5),
                             new OA\Property(property: 'price', type: 'number', format: 'float', example: 3999.99),
                             new OA\Property(property: 'categoryid', type: 'integer', example: 2),
-                            new OA\Property(property: 'category', type: 'string', example: 'Laptopy')
+                            new OA\Property(property: 'additionalInfo', type: 'string', example: "Magazyn A2 -> 12"),
+                            new OA\Property(property: 'pricingInfo', type: 'string', example: "Do laptopa dołaczony jest kabel zasilania")
                         ]
                     )
                 )

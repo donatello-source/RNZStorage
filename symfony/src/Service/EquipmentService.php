@@ -47,6 +47,8 @@ readonly class EquipmentService
         $equipment->setQuantity($data['quantity']);
         $equipment->setPrice($data['price']);
         $equipment->setCategoryId($data['categoryid'] ?? null);
+        $equipment->setPricingInfo($data['pricing_info'] ?? null);
+        $equipment->setAdditionalInfo($data['additional_info'] ?? null);
 
         $this->entityManager->persist($equipment);
         $this->entityManager->flush();
@@ -61,9 +63,9 @@ readonly class EquipmentService
             return null;
         }
 
-        foreach (['name', 'description', 'quantity', 'price', 'categoryid'] as $field) {
+        foreach (['name', 'description', 'quantity', 'price', 'categoryid', 'pricing_info', 'additional_info'] as $field) {
             if (isset($data[$field])) {
-                $setter = 'set' . ucfirst($field);
+                $setter = 'set' . str_replace(' ', '', ucwords(str_replace('_', ' ', $field)));
                 $equipment->$setter($data[$field]);
             }
         }
@@ -99,6 +101,8 @@ readonly class EquipmentService
             'price' => $equipment->getPrice(),
             'categoryid' => $equipment->getCategoryId(),
             'category' => $categoryName,
+            'pricing_info' => $equipment->getPricingInfo(),
+            'additional_info' => $equipment->getAdditionalInfo(),
         ];
     }
 }
