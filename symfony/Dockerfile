@@ -23,4 +23,4 @@ WORKDIR /var/www/symfony
 
 COPY . /var/www/symfony
 
-RUN composer install --no-interaction --prefer-dist
+RUN composer install --ignore-platform-reqs

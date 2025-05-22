@@ -5,6 +5,7 @@ import LoginForm from './components/LoginForm.jsx';
 import HomePage from './components/HomePage.jsx';
 import AdminPanel from './components/AdminPanel.jsx';
 import EquipmentPage from './components/EquipmentPage.jsx';
+import QuotesPage from './components/QuotesPage.jsx';
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <Route path="/home" element={<HomePage />} />
         <Route path="/admin" element={<AdminPanel />} />
         <Route path="/equipment" element={<EquipmentPage />} />
+        <Route path="/quotes" element={<QuotesPage />} />
       </Routes>
     </Router>
   );

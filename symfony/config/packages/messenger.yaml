@@ -4,9 +4,9 @@ framework:
     transports:
       async:
         dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
-        options:
-          exchange:
-            name: messages
+        # options:
+        #   exchange:
+        #     name: messages
     routing:
       App\Message\UploadXlsxMessage: async
 

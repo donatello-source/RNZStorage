@@ -1,3 +1,6 @@
+parameters:
+  upload_dir: '%kernel.project_dir%/var/uploads'
+
 services:
     _defaults:
         autowire: true
@@ -22,5 +25,7 @@ services:
     App\Controller\:
         resource: '../src/Controller'
         tags: ['controller.service_arguments']
-
+    App\Service\UploadService:
+        arguments:
+            $uploadDir: '%upload_dir%'
     Doctrine\ORM\EntityManagerInterface: '@doctrine.orm.entity_manager'
