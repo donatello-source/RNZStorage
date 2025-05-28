@@ -76,8 +76,49 @@ const CreateQuotePage = () => {
 
   const handleSubmit = e => {
     e.preventDefault();
-    // Submit logic
-    console.log({ zamawiajacy, projekt, lokalizacja, dates });
+
+    const dataToSave = {
+      zamawiajacy,
+      projekt,
+      lokalizacja,
+      daty: dates,
+      tabele: equipmentTables.map(table => ({
+        kategoria: table.label,
+        rabatTabelki: table.discount,
+        sprzety: table.items.map(item => ({
+          id: item.id,
+          nazwa: item.name,
+          ilosc: item.count,
+          dni: item.days,
+          cenaJednostkowa: item.price,
+          rabat: item.discountItem,
+          koszt: (
+            (item.price || 0) *
+            (item.count || 1) *
+            (item.days || 1) *
+            (1 - (item.discountItem || 0) / 100) *
+            (1 - (table.discount || 0) / 100)
+          ).toFixed(2),
+          pricingInfo: item.pricingInfo,
+          showComment: item.showComment,
+        })),
+      })),
+      rabatCalkowity: globalDiscount,
+      sumaNetto: netTotal.toFixed(2),
+      sumaNettoPoRabacie: netTotalAfterDiscount.toFixed(2),
+      sumaBrutto: (netTotalAfterDiscount * 1.23).toFixed(2),
+      dodatkoweInformacje: equipmentTables.flatMap(table =>
+        table.items
+          .filter(item => item.pricingInfo)
+          .map(item => ({
+            nazwa: item.name,
+            pricingInfo: item.pricingInfo,
+            widocznosc: item.showComment,
+          }))
+      ),
+    };
+
+    console.log('Dane do zapisu:', dataToSave);
   };
 
   const netTotal = equipmentTables.reduce(
