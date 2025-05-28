@@ -74,9 +74,10 @@ const CreateQuotePage = () => {
   const removeDateRow = idx =>
     setDates(dates => dates.length > 1 ? dates.filter((_, i) => i !== idx) : dates);
 
-  const handleSubmit = e => {
+  const handleSubmit = async e => {
     e.preventDefault();
 
+    // Przygotuj dane do wysłania (tylko potrzebne pola)
     const dataToSave = {
       zamawiajacy,
       projekt,
@@ -87,38 +88,37 @@ const CreateQuotePage = () => {
         rabatTabelki: table.discount,
         sprzety: table.items.map(item => ({
           id: item.id,
-          nazwa: item.name,
           ilosc: item.count,
           dni: item.days,
-          cenaJednostkowa: item.price,
           rabat: item.discountItem,
-          koszt: (
-            (item.price || 0) *
-            (item.count || 1) *
-            (item.days || 1) *
-            (1 - (item.discountItem || 0) / 100) *
-            (1 - (table.discount || 0) / 100)
-          ).toFixed(2),
-          pricingInfo: item.pricingInfo,
           showComment: item.showComment,
         })),
       })),
       rabatCalkowity: globalDiscount,
-      sumaNetto: netTotal.toFixed(2),
-      sumaNettoPoRabacie: netTotalAfterDiscount.toFixed(2),
-      sumaBrutto: (netTotalAfterDiscount * 1.23).toFixed(2),
-      dodatkoweInformacje: equipmentTables.flatMap(table =>
-        table.items
-          .filter(item => item.pricingInfo)
-          .map(item => ({
-            nazwa: item.name,
-            pricingInfo: item.pricingInfo,
-            widocznosc: item.showComment,
-          }))
-      ),
     };
 
-    console.log('Dane do zapisu:', dataToSave);
+    try {
+      const res = await fetch('/api/quotation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(dataToSave),
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        alert('Błąd zapisu: ' + (error.error || res.status));
+        return;
+      }
+
+      const result = await res.json();
+      alert('Wycena zapisana! ID: ' + result.id);
+      // Możesz przekierować lub wyczyścić formularz tutaj
+    } catch (err) {
+      alert('Błąd połączenia z serwerem');
+    }
   };
 
   const netTotal = equipmentTables.reduce(
