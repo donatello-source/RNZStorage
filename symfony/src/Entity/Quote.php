@@ -14,11 +14,18 @@ class Quote
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column]
-    private ?int $company = null;
+    #[ORM\ManyToOne(targetEntity: Company::class)]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Company $company = null;
 
-    #[ORM\Column(type: Types::TEXT, nullable: true)]
-    private ?string $dodatkoweInformacje = null;
+    #[ORM\Column(length: 255)]
+    private ?string $projekt = null;
+
+    #[ORM\Column(length: 255)]
+    private ?string $lokalizacja = null;
+
+    #[ORM\Column(type: Types::DECIMAL, precision: 5, scale: 2)]
+    private ?string $globalDiscount = null;
 
     #[ORM\Column(length: 20)]
     private ?string $status = null;
@@ -26,54 +33,52 @@ class Quote
     #[ORM\Column(type: Types::DATE_MUTABLE)]
     private ?\DateTimeInterface $dataWystawienia = null;
 
-    #[ORM\Column(type: Types::DATE_MUTABLE)]
-    private ?\DateTimeInterface $dataPoczatek = null;
-
-    #[ORM\Column(type: Types::DATE_MUTABLE)]
-    private ?\DateTimeInterface $dataKoniec = null;
-
-    #[ORM\Column(type: Types::TEXT)]
-    private ?string $daneKontaktowe = null;
-
-    #[ORM\Column(type: Types::TEXT)]
-    private ?string $miejsce = null;
-
-    #[ORM\Column(type: Types::DECIMAL, precision: 5, scale: 2)]
-    private ?string $rabat = null;
-
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    public function setId(int $id): static
-    {
-        $this->id = $id;
-
-        return $this;
-    }
-
-    public function getCompany(): ?int
+    public function getCompany(): ?Company
     {
         return $this->company;
     }
 
-    public function setCompany(int $company): static
+    public function setCompany(Company $company): static
     {
         $this->company = $company;
-
         return $this;
     }
 
-    public function getDodatkoweInformacje(): ?string
+    public function getProjekt(): ?string
     {
-        return $this->dodatkoweInformacje;
+        return $this->projekt;
     }
 
-    public function setDodatkoweInformacje(?string $dodatkoweInformacje): static
+    public function setProjekt(string $projekt): static
     {
-        $this->dodatkoweInformacje = $dodatkoweInformacje;
+        $this->projekt = $projekt;
+        return $this;
+    }
 
+    public function getLokalizacja(): ?string
+    {
+        return $this->lokalizacja;
+    }
+
+    public function setLokalizacja(string $lokalizacja): static
+    {
+        $this->lokalizacja = $lokalizacja;
+        return $this;
+    }
+
+    public function getGlobalDiscount(): ?string
+    {
+        return $this->globalDiscount;
+    }
+
+    public function setGlobalDiscount(string $globalDiscount): static
+    {
+        $this->globalDiscount = $globalDiscount;
         return $this;
     }
 
@@ -85,7 +90,6 @@ class Quote
     public function setStatus(string $status): static
     {
         $this->status = $status;
-
         return $this;
     }
 
@@ -97,67 +101,6 @@ class Quote
     public function setDataWystawienia(\DateTimeInterface $dataWystawienia): static
     {
         $this->dataWystawienia = $dataWystawienia;
-
-        return $this;
-    }
-
-    public function getDataPoczatek(): ?\DateTimeInterface
-    {
-        return $this->dataPoczatek;
-    }
-
-    public function setDataPoczatek(\DateTimeInterface $dataPoczatek): static
-    {
-        $this->dataPoczatek = $dataPoczatek;
-
-        return $this;
-    }
-
-    public function getDataKoniec(): ?\DateTimeInterface
-    {
-        return $this->dataKoniec;
-    }
-
-    public function setDataKoniec(\DateTimeInterface $dataKoniec): static
-    {
-        $this->dataKoniec = $dataKoniec;
-
-        return $this;
-    }
-
-    public function getDaneKontaktowe(): ?string
-    {
-        return $this->daneKontaktowe;
-    }
-
-    public function setDaneKontaktowe(string $daneKontaktowe): static
-    {
-        $this->daneKontaktowe = $daneKontaktowe;
-
-        return $this;
-    }
-
-    public function getMiejsce(): ?string
-    {
-        return $this->miejsce;
-    }
-
-    public function setMiejsce(string $miejsce): static
-    {
-        $this->miejsce = $miejsce;
-
-        return $this;
-    }
-
-    public function getRabat(): ?string
-    {
-        return $this->rabat;
-    }
-
-    public function setRabat(string $rabat): static
-    {
-        $this->rabat = $rabat;
-
         return $this;
     }
 }

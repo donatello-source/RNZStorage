@@ -3,10 +3,12 @@
 namespace App\Service;
 
 use App\Entity\Quote;
+use App\Entity\QuoteDate;
+use App\Entity\QuoteTable;
+use App\Entity\QuoteTableEquipment;
+use App\Entity\Equipment;
 use App\Repository\QuoteRepository;
-use App\Repository\QuoteEquipmentRepository;
 use Doctrine\ORM\EntityManagerInterface;
-
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -14,8 +16,7 @@ class QuotationService
 {
     public function __construct(
         private readonly QuoteRepository $quoteRepository,
-        private readonly QuoteEquipmentRepository $quoteEquipmentRepository,
-        private readonly EntityManagerInterface $entityManager
+        private readonly EntityManagerInterface $em
     ) {}
 
     public function getAllQuotes(): array
@@ -32,51 +33,64 @@ class QuotationService
         return $quote;
     }
 
-    public function getAllQuoteEquipment(): array
-    {
-        return $this->quoteEquipmentRepository->findAll();
-    }
-
-    public function getQuoteEquipmentById(int $id): object
-    {
-        $equipment = $this->quoteEquipmentRepository->find($id);
-        if (!$equipment) {
-            throw new NotFoundHttpException('Item not found in quotation');
-        }
-        return $equipment;
-    }
-
     public function addQuote(array $data): Quote
     {
-        if (!isset(
-            $data['company'],
-            $data['status'],
-            $data['dane_kontaktowe'],
-            $data['miejsce'],
-            $data['data_wystawienia'],
-            $data['data_poczatek'],
-            $data['data_koniec']
-        )) {
+        if (!isset($data['company_id'], $data['projekt'], $data['lokalizacja'])) {
             throw new BadRequestHttpException('Missing required fields');
         }
 
-        try {
-            $quote = new Quote();
-            $quote->setCompany($data['company']);
-            $quote->setStatus($data['status']);
-            $quote->setDaneKontaktowe($data['dane_kontaktowe']);
-            $quote->setMiejsce($data['miejsce']);
-            $quote->setDataWystawienia(new \DateTime($data['data_wystawienia']));
-            $quote->setDataPoczatek(new \DateTime($data['data_poczatek']));
-            $quote->setDataKoniec(new \DateTime($data['data_koniec']));
+        $quote = new Quote();
+        $quote->setCompany($data['company_id']);
+        $quote->setProjekt($data['projekt']);
+        $quote->setLokalizacja($data['lokalizacja']);
+        $quote->setGlobalDiscount($data['global_discount'] ?? 0);
+        $quote->setStatus('nowa');
+        $quote->setDataWystawienia(new \DateTime());
 
-            $this->entityManager->persist($quote);
-            $this->entityManager->flush();
+        $this->em->persist($quote);
 
-            return $quote;
-        } catch (\Exception $e) {
-            throw new BadRequestHttpException('Invalid date or other data');
+        // Daty
+        if (!empty($data['dates'])) {
+            foreach ($data['dates'] as $dateData) {
+                $date = new QuoteDate();
+                $date->setQuote($quote);
+                $date->setType($dateData['type']);
+                $date->setValue($dateData['value']);
+                $date->setComment($dateData['comment'] ?? null);
+                $this->em->persist($date);
+            }
         }
+
+        // Tabelki i sprzęt
+        if (!empty($data['tables'])) {
+            foreach ($data['tables'] as $tableData) {
+                $table = new QuoteTable();
+                $table->setQuote($quote);
+                $table->setLabel($tableData['label']);
+                $table->setDiscount($tableData['discount'] ?? 0);
+                $this->em->persist($table);
+
+                if (!empty($tableData['items'])) {
+                    foreach ($tableData['items'] as $itemData) {
+                        $equipment = $this->em->getRepository(Equipment::class)->find($itemData['equipment_id']);
+                        if (!$equipment) {
+                            throw new BadRequestHttpException('Equipment not found: ' . $itemData['equipment_id']);
+                        }
+                        $qte = new QuoteTableEquipment();
+                        $qte->setQuoteTable($table);
+                        $qte->setEquipment($equipment);
+                        $qte->setCount($itemData['count']);
+                        $qte->setDays($itemData['days']);
+                        $qte->setDiscount($itemData['discount'] ?? 0);
+                        $qte->setShowComment($itemData['show_comment'] ?? false);
+                        $this->em->persist($qte);
+                    }
+                }
+            }
+        }
+
+        $this->em->flush();
+        return $quote;
     }
 
     public function deleteQuote(int $id): void
@@ -85,8 +99,7 @@ class QuotationService
         if (!$quote) {
             throw new NotFoundHttpException('Quotation not found');
         }
-
-        $this->entityManager->remove($quote);
-        $this->entityManager->flush();
+        $this->em->remove($quote);
+        $this->em->flush();
     }
 }
