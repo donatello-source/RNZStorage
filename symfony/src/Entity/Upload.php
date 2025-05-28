@@ -32,6 +32,13 @@ class Upload
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $updatedAt = null;
 
+    #[ORM\Column(length: 10)]
+    private ?string $type = 'file'; // 'file' lub 'folder'
+
+    #[ORM\ManyToOne(targetEntity: self::class)]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?Upload $parent = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -112,6 +119,30 @@ class Upload
     public function setUpdatedAt(\DateTimeInterface $updatedAt): static
     {
         $this->updatedAt = $updatedAt;
+
+        return $this;
+    }
+
+    public function getType(): ?string
+    {
+        return $this->type;
+    }
+
+    public function setType(string $type): static
+    {
+        $this->type = $type;
+
+        return $this;
+    }
+
+    public function getParent(): ?Upload
+    {
+        return $this->parent;
+    }
+
+    public function setParent(?Upload $parent): static
+    {
+        $this->parent = $parent;
 
         return $this;
     }
