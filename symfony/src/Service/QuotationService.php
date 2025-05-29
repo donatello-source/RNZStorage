@@ -103,4 +103,45 @@ class QuotationService
         $this->em->remove($quote);
         $this->em->flush();
     }
+
+    public function getAllQuotesWithPrices(): array
+    {
+        $quotes = $this->quoteRepository->findAll();
+        $result = [];
+
+        foreach ($quotes as $quote) {
+            $netto = 0;
+            $quoteTables = $this->em->getRepository(QuoteTable::class)->findBy(['quote' => $quote]);
+            foreach ($quoteTables as $table) {
+                $tableSum = 0;
+                $equipments = $this->em->getRepository(QuoteTableEquipment::class)->findBy(['quoteTable' => $table]);
+                foreach ($equipments as $qte) {
+                    $equipment = $qte->getEquipment();
+                    $price = $equipment->getPrice();
+                    $count = $qte->getCount();
+                    $days = $qte->getDays();
+                    $discount = $qte->getDiscount() ?? 0;
+                    $itemSum = $price * $count * $days * (1 - $discount / 100);
+                    $tableSum += $itemSum;
+                }
+                $tableDiscount = $table->getDiscount() ?? 0;
+                $tableSum = $tableSum * (1 - $tableDiscount / 100);
+                $netto += $tableSum;
+            }
+            $brutto = $netto * 1.23;
+            $result[] = [
+                'id' => $quote->getId(),
+                'company' => [
+                    'id' => $quote->getCompany()?->getId(),
+                    'name' => $quote->getCompany()?->getNazwa(),
+                ],
+                'status' => $quote->getStatus(),
+                'dataWystawienia' => $quote->getDataWystawienia()?->format('Y-m-d'),
+                'lokalizacja' => $quote->getLokalizacja(),
+                'netto' => round($netto, 2),
+                'brutto' => round($brutto, 2),
+            ];
+        }
+        return $result;
+    }
 }

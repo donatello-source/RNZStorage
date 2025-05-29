@@ -22,6 +22,9 @@ const NavMenu = () => {
       <Button component={Link} to="/quotes" sx={{ display: 'block', marginBottom: '10px' }}>
         Wyceny
       </Button>
+      <Button component={Link} to="/quotes-files" sx={{ display: 'block', marginBottom: '10px' }}>
+        Pliki Wycen
+      </Button>
       <Button component={Link} to="/create-quote" sx={{ display: 'block' }}>
         Utwórz Wycenę
       </Button>

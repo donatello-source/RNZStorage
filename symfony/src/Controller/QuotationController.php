@@ -10,25 +10,23 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\HttpFoundation\Response;
+use Doctrine\ORM\EntityManagerInterface;
 
 #[Route('/api/quotation')]
 class QuotationController extends AbstractController
 {
-    public function __construct(private readonly QuotationService $quotationService) {}
+    public function __construct(
+        private readonly QuotationService $quotationService,
+        private readonly EntityManagerInterface $em
+    ) {}
 
     #[Route('', name: 'quotation_list', methods: ['GET'])]
     #[OA\Get(summary: 'Lista wszystkich wycen')]
     public function list(): JsonResponse
     {
-        $quotes = $this->quotationService->getAllQuotes();
-        return $this->json(array_map(fn(Quote $q) => [
-            'id' => $q->getId(),
-            'company' => $q->getCompany(),
-            'projekt' => $q->getProjekt(),
-            'lokalizacja' => $q->getLokalizacja(),
-            'status' => $q->getStatus(),
-            'dataWystawienia' => $q->getDataWystawienia()?->format('Y-m-d'),
-        ], $quotes));
+        $quotes = $this->quotationService->getAllQuotesWithPrices();
+        return $this->json($quotes);
     }
 
     #[Route('/{id}', name: 'quotation_get', methods: ['GET'])]
@@ -102,5 +100,41 @@ class QuotationController extends AbstractController
     {
         $this->quotationService->deleteQuote($id);
         return $this->json(['message' => 'Usunięto wycenę']);
+    }
+
+    #[Route('/{id}/status', name: 'quotation_status_update', methods: ['PATCH'])]
+    #[OA\Patch(
+        summary: 'Zmień status wyceny',
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['status'],
+                properties: [
+                    new OA\Property(property: 'status', type: 'string', example: 'przyjęta')
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Status zmieniony'),
+            new OA\Response(response: 404, description: 'Nie znaleziono wyceny')
+        ]
+    )]
+    public function updateStatus(int $id, Request $request): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+        $status = $data['status'] ?? null;
+        if (!$status) {
+            return $this->json(['error' => 'Brak statusu'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $quote = $this->quotationService->getQuoteById($id);
+        if (!$quote) {
+            return $this->json(['error' => 'Nie znaleziono wyceny'], Response::HTTP_NOT_FOUND);
+        }
+
+        $quote->setStatus($status);
+        $this->em->flush();
+
+        return $this->json(['message' => 'Status zmieniony']);
     }
 }

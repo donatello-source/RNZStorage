@@ -1,205 +1,89 @@
 import React, { useEffect, useState } from 'react';
-import {
-  Box,
-  Button,
-  Typography,
-  CircularProgress,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  IconButton,
-  Paper,
-  Grid,
-} from '@mui/material';
+import { Box, Typography, Grid, CircularProgress, Alert, TextField, Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
+import QuoteCard from './QuoteCard';
 import Header from './Header';
 import NavMenu from './NavMenu';
-import FolderIcon from '@mui/icons-material/Folder';
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
+
+const getQuoteBgColor = (quote) => {
+  const status = (quote.status || '').toLowerCase();
+  const dateStr = quote.dataWystawienia;
+  if (!dateStr) return 'white';
+
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+
+  if (status === 'przyjęta') return '#c8e6c9';
+  if (status === 'odrzucona' || diffDays > 7) return '#ffcdd2';
+  if (diffDays <= 7) return '#ffe0b2';
+  return 'white';
+};
 
 const QuotesPage = () => {
-  const [treeData, setTreeData] = useState([]);
-  const [currentFolderId, setCurrentFolderId] = useState(null);
-  const [parentStack, setParentStack] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  const [showNewFolderModal, setShowNewFolderModal] = useState(false);
-  const [newFolderName, setNewFolderName] = useState('');
-  const [showRenameModal, setShowRenameModal] = useState(false);
-  const [renameTarget, setRenameTarget] = useState(null);
-  const [renameValue, setRenameValue] = useState('');
-  const [deleteTarget, setDeleteTarget] = useState(null);
-  const [deleteTargetType, setDeleteTargetType] = useState('folder');
-  const [currentFolderName, setCurrentFolderName] = useState('Główny');
-  const [uploadingFiles, setUploadingFiles] = useState([]);
-  
-  const fetchChildren = async (parentId = null, pushStack = false) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const url = `/api/upload/${parentId ?? 0}/children`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('Błąd pobierania folderów');
-      const data = await res.json();
-      setTreeData(data);
-
-      // Pobierz nazwę folderu, jeśli nie jesteś w głównym
-      if (parentId && parentId !== 0) {
-        const folderRes = await fetch(`/api/upload/${parentId}`);
-        if (folderRes.ok) {
-          const folderData = await folderRes.json();
-          setCurrentFolderName(folderData.name || '...');
-        } else {
-          setCurrentFolderName('...');
-        }
-      } else {
-        setCurrentFolderName('Główny');
-      }
-
-      if (pushStack && currentFolderId) {
-        setParentStack(prev => [...prev, currentFolderId]);
-      }
-      setCurrentFolderId(parentId);
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const [quotes, setQuotes] = useState([]);
+  const [filteredQuotes, setFilteredQuotes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [search, setSearch] = useState('');
+  const [selectedQuote, setSelectedQuote] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [statusLoading, setStatusLoading] = useState(false);
 
   useEffect(() => {
-    fetchChildren(null);
+    const fetchQuotes = async () => {
+      try {
+        const res = await fetch('/api/quotation');
+        if (!res.ok) throw new Error('Błąd pobierania wycen');
+        const data = await res.json();
+        setQuotes(data);
+        setFilteredQuotes(data);
+      } catch (e) {
+        setError(e.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchQuotes();
   }, []);
 
-  const handleEnterFolder = (folderId) => {
-    fetchChildren(folderId, true);
-  };
-
-  const handleBack = () => {
-    if (parentStack.length === 0) {
-      fetchChildren(null);
-      setParentStack([]);
+  useEffect(() => {
+    if (!search) {
+      setFilteredQuotes(quotes);
     } else {
-      const prev = [...parentStack];
-      const parentId = prev.pop();
-      setParentStack(prev);
-      fetchChildren(parentId || null, false);
+      setFilteredQuotes(
+        quotes.filter(q =>
+          (q.company?.name || '').toLowerCase().includes(search.toLowerCase()) ||
+          (q.lokalizacja || '').toLowerCase().includes(search.toLowerCase()) ||
+          (q.status || '').toLowerCase().includes(search.toLowerCase()) ||
+          (q.info || '').toLowerCase().includes(search.toLowerCase())
+        )
+      );
     }
-  };
+  }, [search, quotes]);
 
-  // Tworzenie folderu
-  const handleCreateFolder = async () => {
+  const handleStatusChange = async (status) => {
+    if (!selectedQuote) return;
+    setStatusLoading(true);
     try {
-      await fetch('/api/upload/folder', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newFolderName, parent: currentFolderId }),
-      });
-      setShowNewFolderModal(false);
-      setNewFolderName('');
-      fetchChildren(currentFolderId);
-    } catch (e) {
-      setError('Błąd tworzenia folderu');
-    }
-  };
-
-  // Zmiana nazwy
-  const handleRename = async () => {
-    try {
-      await fetch(`/api/upload/${renameTarget}/rename`, {
+      const res = await fetch(`/api/quotation/${selectedQuote.id}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: renameValue }),
+        body: JSON.stringify({ status }),
       });
-      setShowRenameModal(false);
-      setRenameTarget(null);
-      setRenameValue('');
-      fetchChildren(currentFolderId);
+      if (!res.ok) throw new Error('Błąd zmiany statusu');
+      // Odśwież listę wycen
+      const updated = quotes.map(q =>
+        q.id === selectedQuote.id ? { ...q, status } : q
+      );
+      setQuotes(updated);
+      setFilteredQuotes(updated);
+      setShowModal(false);
     } catch (e) {
-      setError('Błąd zmiany nazwy');
+      alert(e.message);
+    } finally {
+      setStatusLoading(false);
     }
   };
-
-  // Usuwanie pliku/folderu
-  const handleDelete = async () => {
-    try {
-      await fetch(`/api/upload/${deleteTarget}`, {
-        method: 'DELETE',
-      });
-      setDeleteTarget(null);
-      fetchChildren(currentFolderId);
-    } catch (e) {
-      setError('Błąd usuwania');
-    }
-  };
-
-  // Drag&Drop
-  const handleDrop = async (draggedId, targetId) => {
-    if (!draggedId || !targetId || draggedId === targetId) return;
-    await fetch(`/api/upload/${draggedId}/move`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ parent: targetId }),
-    });
-    fetchChildren(currentFolderId);
-  };
-
-  const handleFileUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    if (!['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/x-iwork-numbers-sffnumbers'].includes(file.type) &&
-        !file.name.endsWith('.xlsx') && !file.name.endsWith('.numbers')) {
-      setError('Dozwolone tylko pliki .xlsx lub .numbers');
-      return;
-    }
-
-    // Dodaj do listy uploadowanych
-    setUploadingFiles(prev => [...prev, { name: file.name, status: 'uploading', id: null }]);
-
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('parent', currentFolderId ?? '');
-
-    try {
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
-      if (!res.ok) throw new Error('Błąd wysyłania pliku');
-      const data = await res.json();
-
-      // Aktualizuj id uploadu
-      setUploadingFiles(prev => prev.map(f =>
-        f.name === file.name && !f.id ? { ...f, id: data.id } : f
-      ));
-
-      // Polling statusu
-      pollUploadStatus(data.id, file.name);
-    } catch (e) {
-      setUploadingFiles(prev => prev.filter(f => f.name !== file.name));
-      setError('Błąd wysyłania pliku');
-    }
-  };
-
-  const pollUploadStatus = (id, fileName) => {
-    const interval = setInterval(async () => {
-      const res = await fetch(`/api/upload/${id}/status`);
-      if (!res.ok) return;
-      const data = await res.json();
-      if (data.status === 'done' || data.status === 'error') {
-        setUploadingFiles(prev => prev.filter(f => f.id !== id));
-        fetchChildren(currentFolderId);
-        clearInterval(interval);
-      }
-    }, 2000);
-  };
-
-
 
   return (
     <div className="home-container">
@@ -208,202 +92,96 @@ const QuotesPage = () => {
         <NavMenu />
         <Box className="main-content" sx={{ flex: 1, padding: 3 }}>
           <Typography variant="h4" gutterBottom>
-            Wyceny - Foldery
+            Wyceny
           </Typography>
-
-          <Box sx={{ mb: 2, display: 'flex', gap: 2 }}>
-            <Button variant="contained" onClick={() => setShowNewFolderModal(true)}>
-              Nowy folder
-            </Button>
-            {currentFolderId && (
-              <Button
-                variant="outlined"
-                startIcon={<ArrowBackIcon />}
-                onClick={handleBack}
-              >
-                Wstecz
-              </Button>
-            )}
+          <Box sx={{ mb: 3 }}>
+            <TextField
+              label="Szukaj"
+              variant="outlined"
+              fullWidth
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
           </Box>
-
-          <Box sx={{ mb: 2 }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-              {currentFolderName}
-            </Typography>
-          </Box>
-
-          {error && (
-            <Typography color="error" sx={{ mb: 2 }}>
-              {error}
-            </Typography>
-          )}
-
-          {isLoading ? (
+          {loading ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 5 }}>
               <CircularProgress />
             </Box>
+          ) : error ? (
+            <Alert severity="error">{error}</Alert>
           ) : (
-            treeData.length === 0 ? (
-              <Typography>Brak folderów.</Typography>
-            ) : (
-              <Grid container spacing={2}>
-                {treeData.map(node => (
-                  <Grid item key={node.id} xs={12} sm={6} md={4} lg={3}>
-                    <Paper
-                      elevation={3}
-                      sx={{
-                        p: 2,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 2,
-                        cursor: node.type === 'folder' ? 'pointer' : 'default',
-                        position: 'relative',
+            <Grid container spacing={2}>
+              {filteredQuotes.length === 0 ? (
+                <Typography>Brak wycen.</Typography>
+              ) : (
+                filteredQuotes.map(quote => (
+                  <Grid item xs={12} sm={6} md={4} key={quote.id}>
+                    <QuoteCard
+                      quote={quote}
+                      bgColor={getQuoteBgColor(quote)}
+                      onClick={() => {
+                        setSelectedQuote(quote);
+                        setShowModal(true);
                       }}
-                      onClick={() => node.type === 'folder' && handleEnterFolder(node.id)}
-                      draggable
-                      onDragStart={e => {
-                        e.dataTransfer.setData('uploadId', node.id);
-                      }}
-                      onDrop={async e => {
-                        e.preventDefault();
-                        const draggedId = e.dataTransfer.getData('uploadId');
-                        if (draggedId && node.type === 'folder') {
-                          await handleDrop(draggedId, node.id);
-                        }
-                      }}
-                      onDragOver={e => {
-                        if (node.type === 'folder') e.preventDefault();
-                      }}
-                    >
-                      {node.type === 'folder' ? <FolderIcon fontSize="large" /> : <InsertDriveFileIcon fontSize="large" />}
-                      <span style={{ flex: 1 }}>{node.name}</span>
-                      <IconButton
-                        size="small"
-                        onClick={e => {
-                          e.stopPropagation();
-                          setRenameTarget(node.id);
-                          setRenameValue(node.name);
-                          setShowRenameModal(true);
-                        }}
-                      >
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        onClick={e => {
-                          e.stopPropagation();
-                          setDeleteTarget(node.id);
-                          setDeleteTargetType(node.type);
-                        }}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </Paper>
+                    />
                   </Grid>
-                ))}
-              </Grid>
-            )
+                ))
+              )}
+            </Grid>
           )}
-
-          <Button
-            variant="outlined"
-            component="label"
-          >
-            Dodaj plik
-            <input
-              type="file"
-              accept=".xlsx,.numbers"
-              hidden
-              onChange={handleFileUpload}
-            />
-          </Button>
-
-          {/* Modal nowego folderu */}
-          <Dialog open={showNewFolderModal} onClose={() => setShowNewFolderModal(false)}>
-            <DialogTitle>Nowy folder</DialogTitle>
-            <DialogContent>
-              <TextField
-                autoFocus
-                label="Nazwa folderu"
-                value={newFolderName}
-                onChange={e => setNewFolderName(e.target.value)}
-                fullWidth
-              />
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={() => setShowNewFolderModal(false)}>Anuluj</Button>
-              <Button
-                variant="contained"
-                disabled={!newFolderName}
-                onClick={handleCreateFolder}
-              >Utwórz</Button>
-            </DialogActions>
-          </Dialog>
-
-          {/* Modal zmiany nazwy */}
-          <Dialog open={showRenameModal} onClose={() => setShowRenameModal(false)}>
-            <DialogTitle>Zmień nazwę</DialogTitle>
-            <DialogContent>
-              <TextField
-                autoFocus
-                label="Nowa nazwa"
-                value={renameValue}
-                onChange={e => setRenameValue(e.target.value)}
-                fullWidth
-              />
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={() => setShowRenameModal(false)}>Anuluj</Button>
-              <Button
-                variant="contained"
-                disabled={!renameValue}
-                onClick={handleRename}
-              >Zmień</Button>
-            </DialogActions>
-          </Dialog>
-
-          {/* Modal potwierdzenia usuwania */}
-          <Dialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)}>
+          <Dialog open={showModal} onClose={() => setShowModal(false)}>
             <DialogTitle>
-              {deleteTargetType === 'folder'
-                ? 'Czy na pewno chcesz usunąć folder?'
-                : 'Czy na pewno chcesz usunąć plik?'}
+              Zmień status wyceny
             </DialogTitle>
+            <DialogContent>
+              <Typography>
+                Firma: {selectedQuote?.company?.name || selectedQuote?.company}
+              </Typography>
+              <Typography>
+                Status: {selectedQuote?.status}
+              </Typography>
+              <Typography>
+                Data wystawienia: {selectedQuote?.dataWystawienia}
+              </Typography>
+              <Typography>
+                Miejsce: {selectedQuote?.lokalizacja}
+              </Typography>
+              <Typography>
+                Netto: {selectedQuote?.netto} zł
+              </Typography>
+              <Typography>
+                Brutto: {selectedQuote?.brutto} zł
+              </Typography>
+            </DialogContent>
             <DialogActions>
-              <Button onClick={() => setDeleteTarget(null)}>Anuluj</Button>
-              <Button color="error" variant="contained" onClick={handleDelete}>Usuń</Button>
+              <Button
+                color="success"
+                disabled={statusLoading}
+                onClick={() => handleStatusChange('przyjęta')}
+              >
+                Ustaw jako przyjęta
+              </Button>
+              <Button
+                color="error"
+                disabled={statusLoading}
+                onClick={() => handleStatusChange('odrzucona')}
+              >
+                Ustaw jako odrzucona
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={() => {
+                  setShowModal(false);
+                  // Przekierowanie do podglądu
+                  window.location.href = `/quote/${selectedQuote.id}/edit`;
+                }}
+              >
+                Podgląd
+              </Button>
+              <Button onClick={() => setShowModal(false)}>Zamknij</Button>
             </DialogActions>
           </Dialog>
         </Box>
-      </Box>
-
-      <Box
-        sx={{
-          position: 'fixed',
-          right: 24,
-          bottom: 24,
-          zIndex: 1300,
-          minWidth: 250,
-        }}
-      >
-        {uploadingFiles.map(f => (
-          <Paper
-            key={f.name}
-            sx={{
-              mb: 1,
-              p: 2,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 2,
-              background: '#1976d2',
-              color: 'white',
-            }}
-            elevation={6}
-          >
-            <CircularProgress size={20} sx={{ color: 'white' }} />
-            <span>Wysyłanie {f.name}</span>
-          </Paper>
-        ))}
       </Box>
     </div>
   );

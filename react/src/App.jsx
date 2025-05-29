@@ -5,6 +5,7 @@ import LoginForm from './components/LoginForm.jsx';
 import HomePage from './components/HomePage.jsx';
 import AdminPanel from './components/AdminPanel.jsx';
 import EquipmentPage from './components/EquipmentPage.jsx';
+import QuotesFilesPage from './components/QuotesFilesPage.jsx';
 import QuotesPage from './components/QuotesPage.jsx';
 import CreateQuotePage from './components/CreateQuotePage';
 
@@ -18,6 +19,7 @@ function App() {
         <Route path="/admin" element={<AdminPanel />} />
         <Route path="/equipment" element={<EquipmentPage />} />
         <Route path="/quotes" element={<QuotesPage />} />
+        <Route path="/quotes-files" element={<QuotesFilesPage />} />
         <Route path="/create-quote" element={<CreateQuotePage/>} />
       </Routes>
     </Router>
