@@ -22,27 +22,21 @@ class UploadXlsxMessageHandler
     public function __invoke(UploadXlsxMessage $message)
     {
         $upload = $this->uploadRepository->find($message->getId());
-
         if (!$upload) {
-            return; // lub loguj błąd
+            return;
         }
 
-        $upload->setStatus('processing');
-        $this->entityManager->flush();
+        $tmpPath = $message->getFilePath();
+        $finalPath = '/var/www/symfony/uploads/' . uniqid() . '_' . $message->getOriginalName();
 
-        try {
-            // Przetwarzanie pliku XLSX tutaj
-            $filePath = $upload->getFilePath();
-
-            // TODO: dodaj logikę parsowania np. PhpSpreadsheet
-
-            // Po sukcesie:
-            $upload->setStatus('done');
-        } catch (\Throwable $e) {
+        if (!rename($tmpPath, $finalPath)) {
             $upload->setStatus('error');
-            $upload->setErrorMessage($e->getMessage());
+            $this->entityManager->flush();
+            return;
         }
 
+        $upload->setFilePath($finalPath);
+        $upload->setStatus('done');
         $this->entityManager->flush();
     }
 }

@@ -7,6 +7,7 @@ services:
     container_name: symfony_php
     volumes:
       - ./symfony:/var/www/symfony
+      - uploads_tmp:/tmp/uploads
     networks:
       - symfony_network
     environment:
@@ -20,6 +21,7 @@ services:
     volumes:
       - ./symfony:/var/www/symfony
       - ./docker/nginx-symfony.conf:/etc/nginx/conf.d/default.conf
+      - uploads_tmp:/tmp/uploads
     ports:
       - "8080:80"
       - "443:443"
@@ -75,3 +77,4 @@ networks:
 
 volumes:
   db_data:
+  uploads_tmp:
