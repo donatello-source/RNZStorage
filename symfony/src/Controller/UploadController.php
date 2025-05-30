@@ -11,9 +11,10 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Messenger\MessageBusInterface;
-
+use OpenApi\Attributes as OA;
 
 #[Route('/api/upload')]
+#[OA\Tag(name: 'Upload')]
 final class UploadController extends AbstractController
 {
     public function __construct(
@@ -21,6 +22,14 @@ final class UploadController extends AbstractController
     ) {}
 
     #[Route('/tree', name: 'upload_tree', methods: ['GET'])]
+    #[OA\Get(
+        summary: 'Pobierz drzewo plików i folderów',
+        tags: ['Upload'],
+        responses: [
+            new OA\Response(response: 200, description: 'Drzewo plików'),
+            new OA\Response(response: 401, description: 'Brak autoryzacji')
+        ]
+    )]
     public function tree(UploadRepository $uploadRepository): JsonResponse
     {
         $uploads = $uploadRepository->findAll();
@@ -51,6 +60,24 @@ final class UploadController extends AbstractController
     }
 
     #[Route('/folder', name: 'upload_create_folder', methods: ['POST'])]
+    #[OA\Post(
+        summary: 'Utwórz nowy folder',
+        tags: ['Upload'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['name'],
+                properties: [
+                    new OA\Property(property: 'name', type: 'string', example: 'Nowy folder'),
+                    new OA\Property(property: 'parent', type: 'integer', example: 1, nullable: true)
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Utworzono folder'),
+            new OA\Response(response: 401, description: 'Brak autoryzacji')
+        ]
+    )]
     public function createFolder(Request $request, EntityManagerInterface $em, UploadRepository $uploadRepository): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
@@ -69,6 +96,27 @@ final class UploadController extends AbstractController
     }
 
     #[Route('/{id<\d+>}/rename', name: 'upload_rename', methods: ['PATCH'])]
+    #[OA\Patch(
+        summary: 'Zmień nazwę pliku lub folderu',
+        tags: ['Upload'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['name'],
+                properties: [
+                    new OA\Property(property: 'name', type: 'string', example: 'Nowa nazwa')
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Zmieniono nazwę'),
+            new OA\Response(response: 404, description: 'Nie znaleziono pliku/folderu'),
+            new OA\Response(response: 401, description: 'Brak autoryzacji')
+        ]
+    )]
     public function rename(int $id, Request $request, UploadRepository $uploadRepository, EntityManagerInterface $em): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
@@ -82,6 +130,28 @@ final class UploadController extends AbstractController
     }
 
     #[Route('/{id<\d+>}/move', name: 'upload_move', methods: ['PATCH'])]
+    #[OA\Patch(
+        summary: 'Przenieś plik lub folder',
+        tags: ['Upload'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['parent'],
+                properties: [
+                    new OA\Property(property: 'parent', type: 'integer', example: 2)
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Przeniesiono'),
+            new OA\Response(response: 404, description: 'Nie znaleziono pliku/folderu lub folderu docelowego'),
+            new OA\Response(response: 400, description: 'Błąd walidacji'),
+            new OA\Response(response: 401, description: 'Brak autoryzacji')
+        ]
+    )]
     public function move(int $id, Request $request, UploadRepository $uploadRepository, EntityManagerInterface $em): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
@@ -112,6 +182,17 @@ final class UploadController extends AbstractController
     }
 
     #[Route('/{id<\d+>}/children', name: 'upload_folder_children', methods: ['GET'])]
+    #[OA\Get(
+        summary: 'Pobierz dzieci folderu',
+        tags: ['Upload'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Lista dzieci folderu'),
+            new OA\Response(response: 401, description: 'Brak autoryzacji')
+        ]
+    )]
     public function folderChildren(int $id, UploadRepository $uploadRepository): JsonResponse
     {
         $criteria = $id === 0 ? ['parent' => null] : ['parent' => $id];
@@ -124,6 +205,18 @@ final class UploadController extends AbstractController
     }
 
     #[Route('/{id<\d+>}/status', name: 'upload_status', methods: ['GET'])]
+    #[OA\Get(
+        summary: 'Pobierz status pliku',
+        tags: ['Upload'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Status pliku'),
+            new OA\Response(response: 404, description: 'Nie znaleziono pliku'),
+            new OA\Response(response: 401, description: 'Brak autoryzacji')
+        ]
+    )]
     public function status(int $id, UploadRepository $uploadRepository): JsonResponse
     {
         $upload = $uploadRepository->find($id);
@@ -134,6 +227,18 @@ final class UploadController extends AbstractController
     }
 
     #[Route('/{id<\d+>}/download', name: 'upload_download', methods: ['GET'])]
+    #[OA\Get(
+        summary: 'Pobierz plik do pobrania',
+        tags: ['Upload'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Plik do pobrania'),
+            new OA\Response(response: 404, description: 'Nie znaleziono pliku'),
+            new OA\Response(response: 401, description: 'Brak autoryzacji')
+        ]
+    )]
     public function download(int $id, UploadRepository $uploadRepository): JsonResponse
     {
         $upload = $uploadRepository->find($id);
@@ -148,6 +253,18 @@ final class UploadController extends AbstractController
     }
 
     #[Route('/{id<\d+>}', name: 'upload_details', methods: ['GET'])]
+    #[OA\Get(
+        summary: 'Szczegóły pliku/folderu',
+        tags: ['Upload'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Szczegóły pliku/folderu'),
+            new OA\Response(response: 404, description: 'Nie znaleziono pliku/folderu'),
+            new OA\Response(response: 401, description: 'Brak autoryzacji')
+        ]
+    )]
     public function details(int $id, UploadRepository $uploadRepository): JsonResponse
     {
         $upload = $uploadRepository->find($id);
@@ -165,6 +282,18 @@ final class UploadController extends AbstractController
 
 
     #[Route('/{id<\d+>}', name: 'upload_delete', methods: ['DELETE'])]
+    #[OA\Delete(
+        summary: 'Usuń plik lub folder',
+        tags: ['Upload'],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Usunięto plik/folder'),
+            new OA\Response(response: 404, description: 'Nie znaleziono pliku/folderu'),
+            new OA\Response(response: 401, description: 'Brak autoryzacji')
+        ]
+    )]
     public function delete(int $id, UploadRepository $uploadRepository, EntityManagerInterface $em): JsonResponse
     {
         $upload = $uploadRepository->find($id);
@@ -183,6 +312,28 @@ final class UploadController extends AbstractController
     }
 
     #[Route('', name: 'upload_file', methods: ['POST'])]
+    #[OA\Post(
+        summary: 'Wyślij plik',
+        tags: ['Upload'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(
+                    type: 'object',
+                    properties: [
+                        new OA\Property(property: 'file', type: 'string', format: 'binary'),
+                        new OA\Property(property: 'parent', type: 'integer', example: 1, nullable: true)
+                    ]
+                )
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Plik przesłany'),
+            new OA\Response(response: 400, description: 'Brak pliku'),
+            new OA\Response(response: 401, description: 'Brak autoryzacji')
+        ]
+    )]
     public function uploadFile(Request $request, EntityManagerInterface $em, MessageBusInterface $bus): JsonResponse
     {
         /** @var UploadedFile $file */
@@ -214,6 +365,27 @@ final class UploadController extends AbstractController
     }
 
     #[Route('/generate', name: 'upload_generate_file', methods: ['POST'])]
+    #[OA\Post(
+        summary: 'Wygeneruj plik na podstawie wyceny',
+        tags: ['Upload'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['parent', 'name', 'format', 'quoteId'],
+                properties: [
+                    new OA\Property(property: 'parent', type: 'integer', example: 1),
+                    new OA\Property(property: 'name', type: 'string', example: 'wycena'),
+                    new OA\Property(property: 'format', type: 'string', example: 'xlsx'),
+                    new OA\Property(property: 'quoteId', type: 'integer', example: 5)
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Plik wygenerowany'),
+            new OA\Response(response: 400, description: 'Brak wymaganych danych'),
+            new OA\Response(response: 401, description: 'Brak autoryzacji')
+        ]
+    )]
     public function generateFile(
         Request $request,
         EntityManagerInterface $em,
