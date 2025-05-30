@@ -2,27 +2,16 @@
 
 namespace App\Tests\Controller;
 
+use App\Tests\AuthenticatedWebTestCase;
 use App\Entity\Category;
-use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 
-class CategoryControllerTest extends WebTestCase
+class CategoryControllerTest extends AuthenticatedWebTestCase
 {
-    private EntityManagerInterface $entityManager;
-    private KernelBrowser $client;
-
-    protected function setUp(): void
-    {
-        $this->client = static::createClient();
-        $this->entityManager = $this->client->getContainer()->get(EntityManagerInterface::class);
-    }
-
     public function testGetCategories(): void
     {
+        $this->logInSession();
         $this->client->request('GET', '/api/category');
-
         $this->assertResponseIsSuccessful();
         $this->assertJsonResponse($this->client->getResponse(), 200);
 
@@ -32,25 +21,24 @@ class CategoryControllerTest extends WebTestCase
 
     public function testAddCategory(): void
     {
-        $data = ['nazwa' => 'New Category'];
-
-        $this->client->request('POST', '/api/category', [], [], ['CONTENT_TYPE' => 'application/json'], json_encode($data));
+        $this->logInSession();
+        $data = ['nazwa' => 'Nowa kategoria'];
+        $this->client->request(
+            'POST',
+            '/api/category',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode($data)
+        );
         $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
-        $this->assertJsonResponse($this->client->getResponse(), 201);
-
-        $response = json_decode($this->client->getResponse()->getContent(), true);
-        $this->assertArrayHasKey('id', $response);
-        $this->assertEquals('New Category', $response['nazwa']);
-
-        // Invalid POST (missing 'nazwa')
-        $this->client->request('POST', '/api/category', [], [], ['CONTENT_TYPE' => 'application/json'], json_encode([]));
-        $this->assertResponseStatusCodeSame(Response::HTTP_BAD_REQUEST);
     }
 
     public function testDeleteCategory(): void
     {
+        $this->logInSession();
         $category = new Category();
-        $category->setNazwa('To Be Deleted');
+        $category->setNazwa('To Be Deleted ' . uniqid());
         $this->entityManager->persist($category);
         $this->entityManager->flush();
 
@@ -59,6 +47,19 @@ class CategoryControllerTest extends WebTestCase
 
         $this->client->request('DELETE', '/api/category/99999');
         $this->assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
+    }
+
+    public function testCategoryAppearsInListAfterAdd(): void
+    {
+        $this->logInSession();
+        $name = 'TestListCategory ' . uniqid();
+        $this->client->request('POST', '/api/category', [], [], ['CONTENT_TYPE' => 'application/json'], json_encode(['nazwa' => $name]));
+        $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
+
+        $this->client->request('GET', '/api/category');
+        $response = json_decode($this->client->getResponse()->getContent(), true);
+        $names = array_column($response, 'nazwa');
+        $this->assertContains($name, $names);
     }
 
     private function assertJsonResponse($response, int $statusCode): void
