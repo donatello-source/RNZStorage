@@ -193,4 +193,68 @@ class QuotationService
             'dataWystawienia' => $quote->getDataWystawienia()?->format('Y-m-d'),
         ];
     }
+
+    public function updateQuote(int $id, array $data): void
+    {
+        $quote = $this->getQuoteById($id);
+
+        if (isset($data['zamawiajacy'])) {
+            $company = $this->em->getRepository(Company::class)->find($data['zamawiajacy']);
+            if ($company) {
+                $quote->setCompany($company);
+            }
+        }
+        if (isset($data['projekt'])) {
+            $quote->setProjekt($data['projekt']);
+        }
+        if (isset($data['lokalizacja'])) {
+            $quote->setLokalizacja($data['lokalizacja']);
+        }
+        if (isset($data['rabatCalkowity'])) {
+            $quote->setGlobalDiscount($data['rabatCalkowity']);
+        }
+
+        foreach ($quote->getDates() as $date) {
+            $this->em->remove($date);
+        }
+        foreach ($data['daty'] ?? [] as $dateData) {
+            $date = new QuoteDate();
+            $date->setQuote($quote);
+            $date->setType($dateData['type']);
+            $date->setValue($dateData['value']);
+            $date->setComment($dateData['comment'] ?? null);
+            $this->em->persist($date);
+        }
+
+        foreach ($quote->getTables() as $table) {
+            foreach ($table->getEquipments() as $qte) {
+                $this->em->remove($qte);
+            }
+            $this->em->remove($table);
+        }
+        foreach ($data['tabele'] ?? [] as $tableData) {
+            $table = new QuoteTable();
+            $table->setQuote($quote);
+            $table->setLabel($tableData['kategoria']);
+            $table->setDiscount($tableData['rabatTabelki'] ?? 0);
+            $this->em->persist($table);
+
+            foreach ($tableData['sprzety'] ?? [] as $itemData) {
+                $equipment = $this->em->getRepository(Equipment::class)->find($itemData['id']);
+                if (!$equipment) {
+                    throw new BadRequestHttpException('Equipment not found: ' . $itemData['id']);
+                }
+                $qte = new QuoteTableEquipment();
+                $qte->setQuoteTable($table);
+                $qte->setEquipment($equipment);
+                $qte->setCount($itemData['ilosc']);
+                $qte->setDays($itemData['dni']);
+                $qte->setDiscount($itemData['rabat'] ?? 0);
+                $qte->setShowComment($itemData['showComment'] ?? false);
+                $this->em->persist($qte);
+            }
+        }
+
+        $this->em->flush();
+    }
 }

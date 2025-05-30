@@ -41,6 +41,7 @@ const QuoteEditPage = () => {
   const [equipmentFilter, setEquipmentFilter] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [selectedEquipment, setSelectedEquipment] = useState([]);
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     const fetchCompanies = async () => {
@@ -135,7 +136,8 @@ const QuoteEditPage = () => {
       }
 
       alert('Wycena zaktualizowana!');
-      navigate('/quotes');
+      setIsEditing(false);
+      // Możesz przekierować: navigate('/quotes');
     } catch (err) {
       alert('Błąd połączenia z serwerem');
     }
@@ -184,6 +186,7 @@ const QuoteEditPage = () => {
                         value={zamawiajacy}
                         onChange={e => setZamawiajacy(e.target.value)}
                         size="small"
+                        disabled={!isEditing}
                       >
                         {companies.map(firma => (
                           <MenuItem key={firma.id} value={firma.id}>
@@ -205,6 +208,7 @@ const QuoteEditPage = () => {
                         value={projekt}
                         onChange={e => setProjekt(e.target.value)}
                         size="small"
+                        disabled={!isEditing}
                       />
                     </Grid>
                   </Grid>
@@ -220,6 +224,7 @@ const QuoteEditPage = () => {
                         value={lokalizacja}
                         onChange={e => setLokalizacja(e.target.value)}
                         size="small"
+                        disabled={!isEditing}
                       />
                     </Grid>
                   </Grid>
@@ -260,6 +265,7 @@ const QuoteEditPage = () => {
                             }
                             size="small"
                             sx={{ width: '100%' }}
+                            disabled={!isEditing}
                           >
                             <MenuItem value="single">Jeden dzień</MenuItem>
                             <MenuItem value="range">Przedział</MenuItem>
@@ -279,6 +285,7 @@ const QuoteEditPage = () => {
                             }
                             size="small"
                             sx={{ width: '100%' }}
+                            disabled={!isEditing}
                           />
                         </Grid>
                         <Grid item xs={3}>
@@ -290,18 +297,19 @@ const QuoteEditPage = () => {
                             }
                             size="small"
                             sx={{ width: '100%' }}
+                            disabled={!isEditing}
                           />
                         </Grid>
                         <Grid item xs={1}>
                           <IconButton
                             onClick={() => removeDateRow(idx)}
-                            disabled={dates.length === 1}
+                            disabled={dates.length === 1 || !isEditing}
                             size="small"
                           >
                             <RemoveIcon fontSize="small" />
                           </IconButton>
                           {idx === dates.length - 1 && (
-                            <IconButton onClick={addDateRow} size="small">
+                            <IconButton onClick={addDateRow} size="small" disabled={!isEditing}>
                               <AddIcon fontSize="small" />
                             </IconButton>
                           )}
@@ -330,12 +338,13 @@ const QuoteEditPage = () => {
                     ])
                   }
                   sx={{ mb: 2 }}
+                  disabled={!isEditing}
                 >
                   Dodaj tabelkę
                 </Button>
                 {equipmentTables.map((table, tableIdx) => (
                   <Grid container spacing={2} alignItems="flex-start" sx={{ mb: 4 }} key={tableIdx}>
-                    <Grid item xs={2}>
+                    <Grid item xs={2} sx={{ display: 'flex', alignItems: 'center' }}>
                       <TextField
                         label="Kategoria"
                         value={table.label}
@@ -346,7 +355,20 @@ const QuoteEditPage = () => {
                         }}
                         size="small"
                         fullWidth
+                        disabled={!isEditing}
                       />
+                      <IconButton
+                        aria-label="Usuń tabelkę"
+                        color="error"
+                        onClick={() => {
+                          setEquipmentTables(equipmentTables.filter((_, idx) => idx !== tableIdx));
+                        }}
+                        sx={{ ml: 1 }}
+                        size="small"
+                        disabled={!isEditing}
+                      >
+                        <RemoveIcon />
+                      </IconButton>
                     </Grid>
                     <Grid item xs={10}>
                       <Button
@@ -358,6 +380,7 @@ const QuoteEditPage = () => {
                           setSelectedEquipment(equipmentTables[tableIdx].selectedEquipment || []);
                           setModalOpen(true);
                         }}
+                        disabled={!isEditing}
                       >
                         Dodaj sprzęt
                       </Button>
@@ -384,7 +407,7 @@ const QuoteEditPage = () => {
                                 (1 - (item.discountItem || 0) / 100) *
                                 (1 - (table.discount || 0) / 100);
                               return (
-                                <tr key={idx}>
+                                <tr key={`${tableIdx}-${item.id}`}>
                                   <td>{idx + 1}</td>
                                   <td>{item.name}</td>
                                   <td>
@@ -398,6 +421,7 @@ const QuoteEditPage = () => {
                                         setEquipmentTables(newTables);
                                       }}
                                       inputProps={{ min: 1, style: { width: 60 } }}
+                                      disabled={!isEditing}
                                     />
                                   </td>
                                   <td>
@@ -411,6 +435,7 @@ const QuoteEditPage = () => {
                                         setEquipmentTables(newTables);
                                       }}
                                       inputProps={{ min: 1, style: { width: 60 } }}
+                                      disabled={!isEditing}
                                     />
                                   </td>
                                   <td>{item.price?.toFixed(2) ?? ''}</td>
@@ -425,6 +450,7 @@ const QuoteEditPage = () => {
                                         setEquipmentTables(newTables);
                                       }}
                                       inputProps={{ min: 0, max: 100, style: { width: 60 } }}
+                                      disabled={!isEditing}
                                     />
                                   </td>
                                   <td>
@@ -454,6 +480,7 @@ const QuoteEditPage = () => {
                           }}
                           size="small"
                           inputProps={{ min: 0, max: 100, style: { width: 60 } }}
+                          disabled={!isEditing}
                         />
                       </Box>
                       <Box sx={{ mt: 2, textAlign: 'right' }}>
@@ -487,12 +514,14 @@ const QuoteEditPage = () => {
                         value={categoryFilter}
                         onChange={e => setCategoryFilter(e.target.value)}
                         size="small"
+                        disabled={!isEditing}
                       />
                       <TextField
                         label="Szukaj po nazwie"
                         value={equipmentFilter}
                         onChange={e => setEquipmentFilter(e.target.value)}
                         size="small"
+                        disabled={!isEditing}
                       />
                     </Box>
                     <List>
@@ -506,6 +535,7 @@ const QuoteEditPage = () => {
                             key={e.id}
                             button
                             onClick={() => {
+                              if (!isEditing) return;
                               setSelectedEquipment(prev =>
                                 prev.includes(e.id)
                                   ? prev.filter(id => id !== e.id)
@@ -543,6 +573,7 @@ const QuoteEditPage = () => {
                         setModalOpen(false);
                       }}
                       variant="contained"
+                      disabled={!isEditing}
                     >
                       Dodaj wybrane
                     </Button>
@@ -550,30 +581,36 @@ const QuoteEditPage = () => {
                 </Dialog>
                 <Paper sx={{ p: 2 }}>
                   <Typography variant="subtitle1">Dodatkowe Informacje</Typography>
-                  {equipmentTables.flatMap(table =>
-                    table.items
+                  {[...new Map(
+                    equipmentTables
+                      .flatMap(table => table.items)
                       .filter(item => item.pricing_info)
-                      .map((item, idx) => (
-                        <Box key={table.label + idx} sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                          <Box sx={{ flex: 1 }}>
-                            <b>{item.name}</b> - {item.pricing_info}
-                          </Box>
-                          <Box>
-                            <input
-                              type="checkbox"
-                              checked={item.showComment}
-                              onChange={e => {
-                                const newTables = [...equipmentTables];
-                                const tIdx = equipmentTables.indexOf(table);
-                                newTables[tIdx].items[idx].showComment = e.target.checked;
-                                setEquipmentTables(newTables);
-                              }}
-                            />{" "}
-                            Widoczność
-                          </Box>
-                        </Box>
-                      ))
-                  )}
+                      .map(item => [item.id, item])
+                  ).values()].map(item => (
+                    <Box key={item.id} sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                      <Box sx={{ flex: 1 }}>
+                        <b>{item.name}</b> - {item.pricing_info}
+                      </Box>
+                      <Box>
+                        <input
+                          type="checkbox"
+                          checked={item.showComment}
+                          disabled={!isEditing}
+                          onChange={e => {
+                            // Zmień showComment we wszystkich tabelkach dla tego sprzętu
+                            const newTables = equipmentTables.map(table => ({
+                              ...table,
+                              items: table.items.map(i =>
+                                i.id === item.id ? { ...i, showComment: e.target.checked } : i
+                              ),
+                            }));
+                            setEquipmentTables(newTables);
+                          }}
+                        />{" "}
+                        Widoczność
+                      </Box>
+                    </Box>
+                  ))}
                 </Paper>
               </Box>
               {/* Podsumowanie globalne */}
@@ -587,6 +624,7 @@ const QuoteEditPage = () => {
                     onChange={e => setGlobalDiscount(Number(e.target.value))}
                     size="small"
                     inputProps={{ min: 0, max: 100, style: { width: 60 } }}
+                    disabled={!isEditing}
                   />
                 </Box>
                 <Typography>
@@ -641,12 +679,26 @@ const QuoteEditPage = () => {
                   ) * (1 - globalDiscount / 100) * 1.23).toFixed(2)} zł
                 </Typography>
               </Paper>
+              {isEditing && (
+                <Box sx={{ mt: 4, textAlign: 'right' }}>
+                  <Button variant="contained" color="primary" type="submit">
+                    Zapisz zmiany
+                  </Button>
+                </Box>
+              )}
+            </form>
+            {!isEditing && (
               <Box sx={{ mt: 4, textAlign: 'right' }}>
-                <Button variant="contained" color="primary" type="submit">
-                  Zapisz zmiany
+                <Button
+                  variant="contained"
+                  color="primary"
+                  type="button"
+                  onClick={() => setIsEditing(true)}
+                >
+                  Edytuj
                 </Button>
               </Box>
-            </form>
+            )}
           </Paper>
         </Box>
       </Box>

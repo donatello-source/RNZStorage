@@ -129,4 +129,52 @@ class QuotationController extends AbstractController
 
         return $this->json(['message' => 'Status zmieniony']);
     }
+
+    #[Route('/{id}', name: 'quotation_update', methods: ['PATCH'])]
+    #[OA\Patch(
+        summary: 'Edytuj wycenę',
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'zamawiajacy', type: 'integer'),
+                    new OA\Property(property: 'projekt', type: 'string'),
+                    new OA\Property(property: 'lokalizacja', type: 'string'),
+                    new OA\Property(property: 'daty', type: 'array', items: new OA\Items(
+                        properties: [
+                            new OA\Property(property: 'type', type: 'string'),
+                            new OA\Property(property: 'value', type: 'string'),
+                            new OA\Property(property: 'comment', type: 'string', nullable: true)
+                        ]
+                    )),
+                    new OA\Property(property: 'tabele', type: 'array', items: new OA\Items(
+                        properties: [
+                            new OA\Property(property: 'kategoria', type: 'string'),
+                            new OA\Property(property: 'rabatTabelki', type: 'number'),
+                            new OA\Property(property: 'sprzety', type: 'array', items: new OA\Items(
+                                properties: [
+                                    new OA\Property(property: 'id', type: 'integer'),
+                                    new OA\Property(property: 'ilosc', type: 'integer'),
+                                    new OA\Property(property: 'dni', type: 'integer'),
+                                    new OA\Property(property: 'rabat', type: 'number'),
+                                    new OA\Property(property: 'showComment', type: 'boolean')
+                                ]
+                            ))
+                        ]
+                    )),
+                    new OA\Property(property: 'rabatCalkowity', type: 'number')
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Zaktualizowano wycenę'),
+            new OA\Response(response: 404, description: 'Nie znaleziono wyceny')
+        ]
+    )]
+    public function update(int $id, Request $request): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+        $this->quotationService->updateQuote($id, $data);
+        return $this->json(['message' => 'Wycena zaktualizowana']);
+    }
 }

@@ -333,7 +333,7 @@ const CreateQuotePage = () => {
                 </Button>
                 {equipmentTables.map((table, tableIdx) => (
                   <Grid container spacing={2} alignItems="flex-start" sx={{ mb: 4 }} key={tableIdx}>
-                    <Grid item xs={2}>
+                    <Grid item xs={2} sx={{ display: 'flex', alignItems: 'center' }}>
                       <TextField
                         label="Kategoria"
                         value={table.label}
@@ -345,6 +345,17 @@ const CreateQuotePage = () => {
                         size="small"
                         fullWidth
                       />
+                      <IconButton
+                        aria-label="Usuń tabelkę"
+                        color="error"
+                        onClick={() => {
+                          setEquipmentTables(equipmentTables.filter((_, idx) => idx !== tableIdx));
+                        }}
+                        sx={{ ml: 1 }}
+                        size="small"
+                      >
+                        <RemoveIcon />
+                      </IconButton>
                     </Grid>
                     <Grid item xs={10}>
                       <Button
@@ -382,7 +393,7 @@ const CreateQuotePage = () => {
                                 (1 - (item.discountItem || 0) / 100) *
                                 (1 - (table.discount || 0) / 100);
                               return (
-                                <tr key={idx}>
+                                <tr key={`${tableIdx}-${item.id}`}>
                                   <td>{idx + 1}</td>
                                   <td>{item.name}</td>
                                   <td>
@@ -502,7 +513,6 @@ const CreateQuotePage = () => {
                         .map(e => (
                           <ListItem
                             key={e.id}
-                            button
                             onClick={() => {
                               setSelectedEquipment(prev =>
                                 prev.includes(e.id)
@@ -548,30 +558,35 @@ const CreateQuotePage = () => {
                 </Dialog>
                 <Paper sx={{ p: 2 }}>
                 <Typography variant="subtitle1">Dodatkowe Informacje</Typography>
-                {equipmentTables.flatMap(table =>
-                  table.items
+                {[...new Map(
+                  equipmentTables
+                    .flatMap(table => table.items)
                     .filter(item => item.pricing_info)
-                    .map((item, idx) => (
-                      <Box key={table.label + idx} sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                        <Box sx={{ flex: 1 }}>
-                          <b>{item.name}</b> - {item.pricing_info}
-                        </Box>
-                        <Box>
-                          <input
-                            type="checkbox"
-                            checked={item.showComment}
-                            onChange={e => {
-                              const newTables = [...equipmentTables];
-                              const tIdx = equipmentTables.indexOf(table);
-                              newTables[tIdx].items[idx].showComment = e.target.checked;
-                              setEquipmentTables(newTables);
-                            }}
-                          />{" "}
-                          Widoczność
-                        </Box>
-                      </Box>
-                    ))
-                )}
+                    .map(item => [item.id, item]) // Mapuje po id sprzętu
+                ).values()].map(item => (
+                  <Box key={item.id} sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                    <Box sx={{ flex: 1 }}>
+                      <b>{item.name}</b> - {item.pricing_info}
+                    </Box>
+                    <Box>
+                      <input
+                        type="checkbox"
+                        checked={item.showComment}
+                        onChange={e => {
+                          // Zmień showComment we wszystkich tabelkach dla tego sprzętu
+                          const newTables = equipmentTables.map(table => ({
+                            ...table,
+                            items: table.items.map(i =>
+                              i.id === item.id ? { ...i, showComment: e.target.checked } : i
+                            ),
+                          }));
+                          setEquipmentTables(newTables);
+                        }}
+                      />{" "}
+                      Widoczność
+                    </Box>
+                  </Box>
+                ))}
               </Paper>
               </Box>
               {/* Podsumowanie globalne */}
