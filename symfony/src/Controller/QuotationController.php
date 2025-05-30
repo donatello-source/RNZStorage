@@ -33,16 +33,8 @@ class QuotationController extends AbstractController
     #[OA\Get(summary: 'Szczegóły wyceny')]
     public function get(int $id): JsonResponse
     {
-        $q = $this->quotationService->getQuoteById($id);
-        return $this->json([
-            'id' => $q->getId(),
-            'company' => $q->getCompany(),
-            'projekt' => $q->getProjekt(),
-            'lokalizacja' => $q->getLokalizacja(),
-            'status' => $q->getStatus(),
-            'dataWystawienia' => $q->getDataWystawienia()?->format('Y-m-d'),
-            // Możesz dodać tu relacje (daty, tabelki, sprzęt) jeśli chcesz
-        ]);
+        $data = $this->quotationService->getQuoteDataForEdit($id);
+        return $this->json($data);
     }
 
     #[Route('', name: 'quotation_create', methods: ['POST'])]

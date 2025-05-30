@@ -144,4 +144,53 @@ class QuotationService
         }
         return $result;
     }
+
+    public function getQuoteDataForEdit(int $id): array
+    {
+        $quote = $this->getQuoteById($id);
+
+        $dates = [];
+        foreach ($quote->getDates() as $date) {
+            $dates[] = [
+                'type' => $date->getType(),
+                'value' => $date->getValue(),
+                'comment' => $date->getComment(),
+            ];
+        }
+
+        $tables = [];
+        foreach ($quote->getTables() as $table) {
+            $items = [];
+            foreach ($table->getEquipments() as $qte) {
+                $equipment = $qte->getEquipment();
+                $items[] = [
+                    'id' => $equipment->getId(),
+                    'name' => $equipment->getName(),
+                    'price' => $equipment->getPrice(),
+                    'count' => $qte->getCount(),
+                    'days' => $qte->getDays(),
+                    'discountItem' => $qte->getDiscount(),
+                    'showComment' => $qte->isShowComment(),
+                    'pricing_info' => $equipment->getPricingInfo(),
+                ];
+            }
+            $tables[] = [
+                'label' => $table->getLabel(),
+                'discount' => $table->getDiscount(),
+                'items' => $items,
+            ];
+        }
+
+        return [
+            'id' => $quote->getId(),
+            'company' => $quote->getCompany()?->getId(),
+            'projekt' => $quote->getProjekt(),
+            'lokalizacja' => $quote->getLokalizacja(),
+            'daty' => $dates,
+            'tabele' => $tables,
+            'rabatCalkowity' => $quote->getGlobalDiscount(),
+            'status' => $quote->getStatus(),
+            'dataWystawienia' => $quote->getDataWystawienia()?->format('Y-m-d'),
+        ];
+    }
 }

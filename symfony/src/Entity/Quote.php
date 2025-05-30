@@ -34,6 +34,18 @@ class Quote
     #[ORM\Column(type: Types::DATE_MUTABLE)]
     private ?\DateTimeInterface $dataWystawienia = null;
 
+    #[ORM\OneToMany(mappedBy: 'quote', targetEntity: QuoteDate::class, orphanRemoval: true)]
+    private $dates;
+
+    #[ORM\OneToMany(mappedBy: 'quote', targetEntity: QuoteTable::class, orphanRemoval: true)]
+    private $tables;
+
+    public function __construct()
+    {
+        $this->dates = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->tables = new \Doctrine\Common\Collections\ArrayCollection();
+    }
+
     public function getId(): ?int
     {
         return $this->id;
@@ -103,5 +115,15 @@ class Quote
     {
         $this->dataWystawienia = $dataWystawienia;
         return $this;
+    }
+
+    public function getDates()
+    {
+        return $this->dates;
+    }
+
+    public function getTables()
+    {
+        return $this->tables;
     }
 }

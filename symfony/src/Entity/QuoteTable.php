@@ -23,6 +23,14 @@ class QuoteTable
     #[ORM\Column(type: "decimal", precision: 5, scale: 2)]
     private ?string $discount = null;
 
+    #[ORM\OneToMany(mappedBy: 'quoteTable', targetEntity: QuoteTableEquipment::class, orphanRemoval: true)]
+    private $equipments;
+
+    public function __construct()
+    {
+        $this->equipments = new \Doctrine\Common\Collections\ArrayCollection();
+    }
+
     public function getId(): ?int
     {
         return $this->id;
@@ -71,4 +79,8 @@ class QuoteTable
         return $this;
     }
 
+    public function getEquipments()
+    {
+        return $this->equipments;
+    }
 }
