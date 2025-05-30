@@ -4,26 +4,15 @@ namespace App\Tests\Controller;
 
 use App\Entity\Category;
 use App\Entity\Equipment;
-use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Tests\AuthenticatedWebTestCase;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 
-class EquipmentControllerTest extends WebTestCase
+class EquipmentControllerTest extends AuthenticatedWebTestCase
 {
-    private EntityManagerInterface $entityManager;
-    private KernelBrowser $client;
-
-    protected function setUp(): void
-    {
-        $this->client = static::createClient();
-        $this->entityManager = $this->client->getContainer()->get(EntityManagerInterface::class);
-    }
-
     public function testGetAllEquipment(): void
     {
+        $this->logInSession();
         $this->client->request('GET', '/api/equipment');
-
         $this->assertResponseIsSuccessful();
         $this->assertJsonResponse($this->client->getResponse(), 200);
         $this->assertIsArray(json_decode($this->client->getResponse()->getContent(), true));
@@ -31,6 +20,7 @@ class EquipmentControllerTest extends WebTestCase
 
     public function testAddEquipment(): void
     {
+        $this->logInSession();
         $category = new Category();
         $category->setNazwa('Monitory');
         $this->entityManager->persist($category);
@@ -58,6 +48,7 @@ class EquipmentControllerTest extends WebTestCase
 
     public function testGetEquipmentById(): void
     {
+        $this->logInSession();
         $equipment = $this->createEquipment('Laptop HP');
 
         $this->client->request('GET', '/api/equipment/' . $equipment->getId());
@@ -70,6 +61,7 @@ class EquipmentControllerTest extends WebTestCase
 
     public function testGetEquipmentByCategory(): void
     {
+        $this->logInSession();
         $category = new Category();
         $category->setNazwa('Drukarki');
         $this->entityManager->persist($category);
@@ -93,6 +85,7 @@ class EquipmentControllerTest extends WebTestCase
 
     public function testEditEquipment(): void
     {
+        $this->logInSession();
         $equipment = $this->createEquipment('Do edycji');
 
         $data = ['name' => 'Zmieniony sprzęt', 'quantity' => 7];
@@ -107,6 +100,7 @@ class EquipmentControllerTest extends WebTestCase
 
     public function testDeleteEquipment(): void
     {
+        $this->logInSession();
         $equipment = $this->createEquipment('Do usunięcia');
 
         $this->client->request('DELETE', '/api/equipment/' . $equipment->getId());
