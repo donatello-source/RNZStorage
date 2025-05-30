@@ -3,24 +3,14 @@
 namespace App\Tests\Controller;
 
 use App\Entity\Company;
-use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use App\Tests\AuthenticatedWebTestCase;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 
-class CompanyControllerTest extends WebTestCase
+class CompanyControllerTest extends AuthenticatedWebTestCase
 {
-    private KernelBrowser $client;
-    private EntityManagerInterface $entityManager;
-
-    protected function setUp(): void
-    {
-        $this->client = static::createClient();
-        $this->entityManager = $this->client->getContainer()->get(EntityManagerInterface::class);
-    }
-
     public function testGetAllCompanies(): void
     {
+        $this->logInSession();
         $this->client->request('GET', '/api/company');
         $this->assertResponseIsSuccessful();
         $this->assertJsonResponse($this->client->getResponse(), 200);
@@ -31,7 +21,7 @@ class CompanyControllerTest extends WebTestCase
 
     public function testGetCompanyById(): void
     {
-        // Add test company
+        $this->logInSession();
         $company = new Company();
         $company->setNazwa('Test Co');
         $company->setNip('1234567890');
@@ -43,13 +33,13 @@ class CompanyControllerTest extends WebTestCase
         $this->client->request('GET', '/api/company/' . $company->getId());
         $this->assertResponseIsSuccessful();
 
-        // 404 Not Found
         $this->client->request('GET', '/api/company/99999');
         $this->assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
     }
 
     public function testAddCompany(): void
     {
+        $this->logInSession();
         $validData = [
             'nazwa' => 'New Company',
             'nip' => '9876543210',
@@ -61,17 +51,19 @@ class CompanyControllerTest extends WebTestCase
         $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
         $this->assertJsonResponse($this->client->getResponse(), 201);
 
-        $invalidData = ['nip' => '111']; // Missing required fields
+        $invalidData = ['nip' => '111'];
         $this->client->request('POST', '/api/company', [], [], ['CONTENT_TYPE' => 'application/json'], json_encode($invalidData));
         $this->assertResponseStatusCodeSame(Response::HTTP_BAD_REQUEST);
     }
 
     public function testDeleteCompany(): void
     {
+        $this->logInSession();
         $company = new Company();
         $company->setNazwa('To Delete');
         $company->setNip('1122334455');
         $company->setAdres('Delete St.');
+        $company->setTelefon('000-000-000');
         $this->entityManager->persist($company);
         $this->entityManager->flush();
 
