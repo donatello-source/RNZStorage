@@ -76,6 +76,20 @@ final class PersonController extends AbstractController
                         ]
                     )
                 )
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Osoba nie znaleziona',
+                content: new OA\JsonContent(
+                    type: 'object',
+                    properties: [
+                        new OA\Property(property: 'error', type: 'string', example: 'Osoba nie znaleziona')
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Brak autoryzacji'
             )
         ]
     )]
@@ -109,7 +123,17 @@ final class PersonController extends AbstractController
         ),
         responses: [
             new OA\Response(response: 201, description: 'Dodano osobę'),
-            new OA\Response(response: 400, description: 'Brak wymaganych pól')
+            new OA\Response(
+                response: 400,
+                description: 'Brak wymaganych pól',
+                content: new OA\JsonContent(
+                    type: 'object',
+                    properties: [
+                        new OA\Property(property: 'error', type: 'string', example: 'Brak wymaganych pól')
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Brak autoryzacji')
         ]
     )]
     #[OA\Tag(name: 'Osoby')]
