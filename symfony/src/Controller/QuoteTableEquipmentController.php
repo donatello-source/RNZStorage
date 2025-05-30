@@ -91,7 +91,7 @@ class QuoteTableEquipmentController extends AbstractController
             'count' => $qte->getCount(),
             'days' => $qte->getDays(),
             'discount' => $qte->getDiscount(),
-            'show_comment' => $qte->getShowComment()
+            'show_comment' => $qte->isShowComment()
         ]);
     }
 
@@ -186,7 +186,7 @@ class QuoteTableEquipmentController extends AbstractController
             'count' => $qte->getCount(),
             'days' => $qte->getDays(),
             'discount' => $qte->getDiscount(),
-            'show_comment' => $qte->getShowComment()
+            'show_comment' => $qte->isShowComment()
         ], $items));
     }
 }

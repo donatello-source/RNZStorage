@@ -7,6 +7,7 @@ class UploadXlsxMessage
         private int $id,
         private string $filePath,
         private string $originalName,
+        private ?int $quoteId = null
     ) {
     $this->id = (int) $id;
     }
@@ -24,6 +25,11 @@ class UploadXlsxMessage
     public function getOriginalName(): string
     {
         return $this->originalName;
+    }
+
+    public function getQuoteId(): ?int
+    {
+        return $this->quoteId;
     }
 }
 

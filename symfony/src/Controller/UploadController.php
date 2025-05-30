@@ -20,7 +20,6 @@ final class UploadController extends AbstractController
         private readonly MessageBusInterface $messageBus
     ) {}
 
-    // 1. Endpointy ze stałymi ścieżkami
     #[Route('/tree', name: 'upload_tree', methods: ['GET'])]
     public function tree(UploadRepository $uploadRepository): JsonResponse
     {
@@ -69,7 +68,6 @@ final class UploadController extends AbstractController
         return $this->json(['id' => $folder->getId()]);
     }
 
-    // 2. Endpointy z parametrami pośrednimi
     #[Route('/{id<\d+>}/rename', name: 'upload_rename', methods: ['PATCH'])]
     public function rename(int $id, Request $request, UploadRepository $uploadRepository, EntityManagerInterface $em): JsonResponse
     {
@@ -97,7 +95,6 @@ final class UploadController extends AbstractController
             if (!$parent) {
                 return $this->json(['error' => 'Parent not found'], 404);
             }
-            // Walidacja: nie można przenieść do siebie ani do potomka
             if ($parent->getId() === $upload->getId()) {
                 return $this->json(['error' => 'Nie można przenieść folderu do samego siebie'], 400);
             }
@@ -150,7 +147,6 @@ final class UploadController extends AbstractController
         return $this->file($filePath, $fileName);
     }
 
-    // 3. Endpointy z pojedynczym parametrem na końcu
     #[Route('/{id<\d+>}', name: 'upload_details', methods: ['GET'])]
     public function details(int $id, UploadRepository $uploadRepository): JsonResponse
     {
@@ -212,6 +208,56 @@ final class UploadController extends AbstractController
             $upload->getId(),
             $tmpPath,
             $file->getClientOriginalName()
+        ));
+
+        return $this->json(['id' => $upload->getId()]);
+    }
+
+    #[Route('/generate', name: 'upload_generate_file', methods: ['POST'])]
+    public function generateFile(
+        Request $request,
+        EntityManagerInterface $em,
+        MessageBusInterface $bus,
+        UploadRepository $uploadRepository
+    ): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+        $parent = $data['parent'] ?? null;
+        $name = $data['name'] ?? null;
+        $format = $data['format'] ?? 'xlsx';
+        $quoteId = $data['quoteId'] ?? null;
+
+        if (!$parent || !$name || !in_array($format, ['xlsx', 'numbers'])) {
+            return $this->json(['error' => 'Brak wymaganych danych'], 400);
+        }
+
+        $parentFolder = $uploadRepository->find($parent);
+        if (!$parentFolder || $parentFolder->getType() !== 'folder') {
+            return $this->json(['error' => 'Folder docelowy nie istnieje'], 400);
+        }
+
+        $ext = $format === 'xlsx' ? '.xlsx' : '.numbers';
+        $tmpDir = '/tmp/uploads/';
+        if (!is_dir($tmpDir)) {
+            mkdir($tmpDir, 0777, true);
+        }
+        $tmpPath = $tmpDir . uniqid() . '_' . $name . $ext;
+        file_put_contents($tmpPath, '');
+
+        $upload = new Upload();
+        $upload->setStatus('pending');
+        $upload->setFilePath($tmpPath);
+        $upload->setOriginalName($name . $ext);
+        $upload->setType('file');
+        $upload->setParent($parentFolder);
+        $em->persist($upload);
+        $em->flush();
+
+        $bus->dispatch(new \App\Message\UploadXlsxMessage(
+            $upload->getId(),
+            $tmpPath,
+            $name . $ext,
+            $quoteId
         ));
 
         return $this->json(['id' => $upload->getId()]);

@@ -12,8 +12,9 @@ RUN apt-get update && apt-get install -y \
     libjpeg-dev \
     libfreetype6-dev \
     librabbitmq-dev \
-    libssl-dev && \
-    docker-php-ext-install pdo pdo_pgsql && \
+    libssl-dev \
+    libzip-dev && \
+    docker-php-ext-install pdo pdo_pgsql gd zip && \
     pecl install -f amqp || true && docker-php-ext-enable amqp && \
     rm -rf /var/lib/apt/lists/*
 

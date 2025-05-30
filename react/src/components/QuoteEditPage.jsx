@@ -22,6 +22,10 @@ import RemoveIcon from '@mui/icons-material/Remove';
 import NavMenu from './NavMenu';
 import Header from './Header';
 import { useParams, useNavigate } from 'react-router-dom';
+import FolderIcon from '@mui/icons-material/Folder';
+import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import ArrowRightIcon from '@mui/icons-material/ArrowRight';
 
 const emptyDateRow = { type: 'single', value: '', comment: '' };
 
@@ -42,6 +46,17 @@ const QuoteEditPage = () => {
   const [categoryFilter, setCategoryFilter] = useState('');
   const [selectedEquipment, setSelectedEquipment] = useState([]);
   const [isEditing, setIsEditing] = useState(false);
+  const [showFileTreeModal, setShowFileTreeModal] = useState(false);
+  const [fileTree, setFileTree] = useState([]);
+  const [fileTreeLoading, setFileTreeLoading] = useState(false);
+  const [fileTreeError, setFileTreeError] = useState('');
+  const [selectedFolderId, setSelectedFolderId] = useState(null);
+  const [selectedFormat, setSelectedFormat] = useState('xlsx');
+  const [fileTreeCurrentId, setFileTreeCurrentId] = useState(null);
+  const [fileTreeParentStack, setFileTreeParentStack] = useState([]);
+  const [fileTreeCurrentName, setFileTreeCurrentName] = useState('Główny');
+  const [expandedFolders, setExpandedFolders] = useState([]);
+  const [fileName, setFileName] = useState('');
 
   useEffect(() => {
     const fetchCompanies = async () => {
@@ -137,11 +152,129 @@ const QuoteEditPage = () => {
 
       alert('Wycena zaktualizowana!');
       setIsEditing(false);
-      // Możesz przekierować: navigate('/quotes');
     } catch (err) {
       alert('Błąd połączenia z serwerem');
     }
   };
+
+  const fetchFileTree = async (parentId = null, pushStack = false) => {
+  setFileTreeLoading(true);
+  setFileTreeError('');
+  try {
+    const url = `/api/upload/tree`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Błąd pobierania folderów');
+    const data = await res.json();
+    setFileTree(data);
+    if (parentId && parentId !== 0) {
+      const folderRes = await fetch(`/api/upload/${parentId}`);
+      if (folderRes.ok) {
+        const folderData = await folderRes.json();
+        setFileTreeCurrentName(folderData.name || '...');
+      } else {
+        setFileTreeCurrentName('...');
+      }
+    } else {
+      setFileTreeCurrentName('Główny');
+    }
+
+    if (pushStack && fileTreeCurrentId) {
+      setFileTreeParentStack(prev => [...prev, fileTreeCurrentId]);
+    }
+    setFileTreeCurrentId(parentId);
+  } catch (e) {
+    setFileTreeError(e.message);
+  } finally {
+    setFileTreeLoading(false);
+  }
+  };
+
+  useEffect(() => {
+    if (showFileTreeModal) {
+      fetchFileTree(null);
+      setSelectedFolderId(null);
+      setFileTreeParentStack([]);
+    }
+    // eslint-disable-next-line
+  }, [showFileTreeModal]);
+
+const FolderTree = ({
+  nodes,
+  selectedFolderId,
+  setSelectedFolderId,
+  expandedFolders,
+  setExpandedFolders,
+  level = 0,
+}) => {
+  if (!nodes) return null;
+  return (
+    <Box sx={{ pl: level * 2 }}>
+      {nodes.map(node => (
+        <Box key={node.id}>
+          {node.type === 'folder' && (
+            <Box sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer', bgcolor: selectedFolderId === node.id ? '#e3f2fd' : 'transparent', borderRadius: 1, px: 1 }}
+              onClick={() => setSelectedFolderId(node.id)}
+            >
+              <IconButton
+                size="small"
+                onClick={e => {
+                  e.stopPropagation();
+                  setExpandedFolders(prev =>
+                    prev.includes(node.id)
+                      ? prev.filter(id => id !== node.id)
+                      : [...prev, node.id]
+                  );
+                }}
+              >
+                {expandedFolders.includes(node.id) ? <ArrowDropDownIcon /> : <ArrowRightIcon />}
+              </IconButton>
+              <FolderIcon sx={{ mr: 1 }} color="primary" />
+              <Typography variant="body2">{node.name}</Typography>
+            </Box>
+          )}
+          {node.type === 'file' && (
+            <Box sx={{ display: 'flex', alignItems: 'center', pl: 4 }}>
+              <InsertDriveFileIcon sx={{ mr: 1 }} color="action" />
+              <Typography variant="body2">{node.name}</Typography>
+            </Box>
+          )}
+          {/* Rekurencyjnie pokaż dzieci jeśli folder jest rozwinięty */}
+          {node.type === 'folder' && expandedFolders.includes(node.id) && node.children && node.children.length > 0 && (
+            <FolderTree
+              nodes={node.children}
+              selectedFolderId={selectedFolderId}
+              setSelectedFolderId={setSelectedFolderId}
+              expandedFolders={expandedFolders}
+              setExpandedFolders={setExpandedFolders}
+              level={level + 1}
+            />
+          )}
+        </Box>
+      ))}
+    </Box>
+  );
+};
+
+  const handleSaveFile = async () => {
+  if (!selectedFolderId || !fileName) return;
+  const res = await fetch('/api/upload/generate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      parent: selectedFolderId,
+      name: fileName,
+      format: selectedFormat,
+      quoteId: id,
+    }),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    alert(data.error || 'Błąd zapisu pliku');
+    return;
+  }
+  alert('Plik został utworzony!');
+  setShowFileTreeModal(false);
+};
 
   return (
     <div className="edit-quote-container">
@@ -597,7 +730,6 @@ const QuoteEditPage = () => {
                           checked={item.showComment}
                           disabled={!isEditing}
                           onChange={e => {
-                            // Zmień showComment we wszystkich tabelkach dla tego sprzętu
                             const newTables = equipmentTables.map(table => ({
                               ...table,
                               items: table.items.map(i =>
@@ -679,29 +811,108 @@ const QuoteEditPage = () => {
                   ) * (1 - globalDiscount / 100) * 1.23).toFixed(2)} zł
                 </Typography>
               </Paper>
-              {isEditing && (
-                <Box sx={{ mt: 4, textAlign: 'right' }}>
+            </form>
+            <Box sx={{ mt: 4, textAlign: 'right', display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                {!isEditing ? (
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    type="button"
+                    onClick={() => setIsEditing(true)}
+                  >
+                    Edytuj
+                  </Button>
+                ) : (
                   <Button variant="contained" color="primary" type="submit">
                     Zapisz zmiany
                   </Button>
-                </Box>
-              )}
-            </form>
-            {!isEditing && (
-              <Box sx={{ mt: 4, textAlign: 'right' }}>
+                )}
                 <Button
-                  variant="contained"
-                  color="primary"
+                  variant="outlined"
+                  color="secondary"
                   type="button"
-                  onClick={() => setIsEditing(true)}
+                  onClick={() => setShowFileTreeModal(true)}
                 >
-                  Edytuj
+                  Wygeneruj plik
                 </Button>
               </Box>
-            )}
           </Paper>
         </Box>
       </Box>
+      <Dialog
+        open={showFileTreeModal}
+        onClose={() => setShowFileTreeModal(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Wybierz lokalizację zapisu</DialogTitle>
+        <DialogContent>
+          <Box sx={{ mb: 2 }}>
+            <TextField
+              label="Nazwa pliku"
+              value={fileName}
+              onChange={e => setFileName(e.target.value)}
+              fullWidth
+              size="small"
+              sx={{ mb: 2 }}
+            />
+          </Box>
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="subtitle2" sx={{ mb: 1 }}>
+              Format pliku:
+            </Typography>
+            <Button
+              variant={selectedFormat === 'xlsx' ? 'contained' : 'outlined'}
+              onClick={() => setSelectedFormat('xlsx')}
+              sx={{ mr: 2 }}
+            >
+              XLSX
+            </Button>
+            <Button
+              variant={selectedFormat === 'numbers' ? 'contained' : 'outlined'}
+              onClick={() => setSelectedFormat('numbers')}
+            >
+              Numbers
+            </Button>
+          </Box>
+          <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+            <Button
+              variant="contained"
+              onClick={handleSaveFile}
+              disabled={!selectedFolderId || !fileTreeCurrentName}
+            >
+              Zapisz plik
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={() => {
+                setFileTreeCurrentId(null);
+                setFileTreeCurrentName('Główny');
+                setFileTreeParentStack([]);
+                fetchFileTree(null);
+              }}
+            >
+              Anuluj
+            </Button>
+          </Box>
+          <Box sx={{ border: '1px solid #eee', borderRadius: 1, p: 1, minHeight: 200, maxHeight: 400, overflowY: 'auto' }}>
+  {fileTree.length === 0 ? (
+    <Typography>Brak folderów.</Typography>
+  ) : (
+    <FolderTree
+      nodes={fileTree}
+      selectedFolderId={selectedFolderId}
+      setSelectedFolderId={setSelectedFolderId}
+      expandedFolders={expandedFolders}
+      setExpandedFolders={setExpandedFolders}
+    />
+  )}
+</Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowFileTreeModal(false)}>Zamknij</Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };
