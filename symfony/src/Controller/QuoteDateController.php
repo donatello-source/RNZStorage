@@ -18,6 +18,7 @@ class QuoteDateController extends AbstractController
     #[Route('/create', name: 'quote_date_create', methods: ['POST'])]
     #[OA\Post(
         summary: 'Dodaj datę do wyceny',
+        tags: ['Quote Dates'],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
@@ -32,7 +33,8 @@ class QuoteDateController extends AbstractController
         ),
         responses: [
             new OA\Response(response: 201, description: 'Dodano datę'),
-            new OA\Response(response: 404, description: 'Nie znaleziono wyceny')
+            new OA\Response(response: 404, description: 'Nie znaleziono wyceny'),
+            new OA\Response(response: 401, description: 'Brak autoryzacji')
         ]
     )]
     public function create(Request $request): JsonResponse
@@ -49,6 +51,7 @@ class QuoteDateController extends AbstractController
     #[Route('/{id}', name: 'quote_date_get', methods: ['GET'])]
     #[OA\Get(
         summary: 'Pobierz datę po ID',
+        tags: ['Quote Dates'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), example: 1)
         ],
@@ -65,7 +68,8 @@ class QuoteDateController extends AbstractController
                     ]
                 )
             ),
-            new OA\Response(response: 404, description: 'Nie znaleziono daty')
+            new OA\Response(response: 404, description: 'Nie znaleziono daty'),
+            new OA\Response(response: 401, description: 'Brak autoryzacji')
         ]
     )]
     public function get(int $id): JsonResponse
@@ -85,6 +89,7 @@ class QuoteDateController extends AbstractController
     #[Route('/{id}', name: 'quote_date_update', methods: ['PUT'])]
     #[OA\Put(
         summary: 'Aktualizuj datę',
+        tags: ['Quote Dates'],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
@@ -98,7 +103,8 @@ class QuoteDateController extends AbstractController
         ),
         responses: [
             new OA\Response(response: 200, description: 'Zaktualizowano datę'),
-            new OA\Response(response: 404, description: 'Nie znaleziono daty')
+            new OA\Response(response: 404, description: 'Nie znaleziono daty'),
+            new OA\Response(response: 401, description: 'Brak autoryzacji')
         ]
     )]
     public function update(Request $request, int $id): JsonResponse
@@ -115,12 +121,15 @@ class QuoteDateController extends AbstractController
     #[Route('/{id}', name: 'quote_date_delete', methods: ['DELETE'])]
     #[OA\Delete(
         summary: 'Usuń datę',
+        tags: ['Quote Dates'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), example: 1)
         ],
         responses: [
             new OA\Response(response: 200, description: 'Usunięto datę'),
-            new OA\Response(response: 404, description: 'Nie znaleziono daty')
+            new OA\Response(response: 404, description: 'Nie znaleziono daty'),
+            new OA\Response(response: 401, description: 'Brak autoryzacji')
+
         ]
     )]
     public function delete(int $id): JsonResponse
@@ -136,6 +145,7 @@ class QuoteDateController extends AbstractController
     #[Route('/list/{quoteId}', name: 'quote_date_list', methods: ['GET'])]
     #[OA\Get(
         summary: 'Pobierz wszystkie daty dla wyceny',
+        tags: ['Quote Dates'],
         parameters: [
             new OA\Parameter(name: 'quoteId', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), example: 1)
         ],
