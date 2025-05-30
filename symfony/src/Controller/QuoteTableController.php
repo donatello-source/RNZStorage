@@ -19,6 +19,7 @@ class QuoteTableController extends AbstractController
     #[Route('/create', name: 'quote_table_create', methods: ['POST'])]
     #[OA\Post(
         summary: 'Dodaj tabelkę do wyceny',
+        tags: ['QuoteTable'],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
@@ -32,7 +33,8 @@ class QuoteTableController extends AbstractController
         ),
         responses: [
             new OA\Response(response: 201, description: 'Dodano tabelkę'),
-            new OA\Response(response: 404, description: 'Nie znaleziono wyceny')
+            new OA\Response(response: 404, description: 'Nie znaleziono wyceny'),
+            new OA\Response(response: 401, description: 'Brak autoryzacji')
         ]
     )]
     public function create(Request $request): JsonResponse
@@ -49,6 +51,7 @@ class QuoteTableController extends AbstractController
     #[Route('/{id}', name: 'quote_table_get', methods: ['GET'])]
     #[OA\Get(
         summary: 'Pobierz tabelkę po ID',
+        tags: ['QuoteTable'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), example: 1)
         ],
@@ -64,7 +67,8 @@ class QuoteTableController extends AbstractController
                     ]
                 )
             ),
-            new OA\Response(response: 404, description: 'Nie znaleziono tabelki')
+            new OA\Response(response: 404, description: 'Nie znaleziono tabelki'),
+            new OA\Response(response: 401, description: 'Brak autoryzacji')
         ]
     )]
     public function get(int $id): JsonResponse
@@ -83,6 +87,7 @@ class QuoteTableController extends AbstractController
     #[Route('/{id}', name: 'quote_table_update', methods: ['PUT'])]
     #[OA\Put(
         summary: 'Aktualizuj tabelkę',
+        tags: ['QuoteTable'],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
@@ -95,7 +100,8 @@ class QuoteTableController extends AbstractController
         ),
         responses: [
             new OA\Response(response: 200, description: 'Zaktualizowano tabelkę'),
-            new OA\Response(response: 404, description: 'Nie znaleziono tabelki')
+            new OA\Response(response: 404, description: 'Nie znaleziono tabelki'),
+            new OA\Response(response: 401, description: 'Brak autoryzacji')
         ]
     )]
     public function update(Request $request, int $id): JsonResponse
@@ -112,12 +118,14 @@ class QuoteTableController extends AbstractController
     #[Route('/{id}', name: 'quote_table_delete', methods: ['DELETE'])]
     #[OA\Delete(
         summary: 'Usuń tabelkę',
+        tags: ['QuoteTable'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), example: 1)
         ],
         responses: [
             new OA\Response(response: 200, description: 'Usunięto tabelkę'),
-            new OA\Response(response: 404, description: 'Nie znaleziono tabelki')
+            new OA\Response(response: 404, description: 'Nie znaleziono tabelki'),
+            new OA\Response(response: 401, description: 'Brak autoryzacji')
         ]
     )]
     public function delete(int $id): JsonResponse
@@ -133,6 +141,7 @@ class QuoteTableController extends AbstractController
     #[Route('/list/{quoteId}', name: 'quote_table_list', methods: ['GET'])]
     #[OA\Get(
         summary: 'Pobierz wszystkie tabelki dla wyceny',
+        tags: ['QuoteTable'],
         parameters: [
             new OA\Parameter(name: 'quoteId', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), example: 1)
         ],
@@ -150,7 +159,8 @@ class QuoteTableController extends AbstractController
                         ]
                     )
                 )
-            )
+            ),
+            new OA\Response(response: 401, description: 'Brak autoryzacji')
         ]
     )]
     public function list(int $quoteId): JsonResponse
