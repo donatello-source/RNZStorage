@@ -19,6 +19,7 @@ class QuoteTableEquipmentController extends AbstractController
     #[Route('/create', name: 'quote_table_equipment_create', methods: ['POST'])]
     #[OA\Post(
         summary: 'Dodaj sprzęt do tabelki',
+        tags: ['QuoteTableEquipment'],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
@@ -35,7 +36,8 @@ class QuoteTableEquipmentController extends AbstractController
         ),
         responses: [
             new OA\Response(response: 201, description: 'Dodano sprzęt'),
-            new OA\Response(response: 404, description: 'Nie znaleziono tabelki lub sprzętu')
+            new OA\Response(response: 404, description: 'Nie znaleziono tabelki lub sprzętu'),
+            new OA\Response(response: 401, description: 'Brak autoryzacji')
         ]
     )]
     public function create(Request $request): JsonResponse
@@ -60,6 +62,7 @@ class QuoteTableEquipmentController extends AbstractController
     #[Route('/{id}', name: 'quote_table_equipment_get', methods: ['GET'])]
     #[OA\Get(
         summary: 'Pobierz sprzęt z tabelki po ID',
+        tags: ['QuoteTableEquipment'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), example: 1)
         ],
@@ -77,7 +80,8 @@ class QuoteTableEquipmentController extends AbstractController
                     ]
                 )
             ),
-            new OA\Response(response: 404, description: 'Nie znaleziono sprzętu')
+            new OA\Response(response: 404, description: 'Nie znaleziono sprzętu'),
+            new OA\Response(response: 401, description: 'Brak autoryzacji')
         ]
     )]
     public function get(int $id): JsonResponse
@@ -98,6 +102,7 @@ class QuoteTableEquipmentController extends AbstractController
     #[Route('/{id}', name: 'quote_table_equipment_update', methods: ['PUT'])]
     #[OA\Put(
         summary: 'Aktualizuj sprzęt w tabelce',
+        tags: ['QuoteTableEquipment'],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
@@ -112,7 +117,8 @@ class QuoteTableEquipmentController extends AbstractController
         ),
         responses: [
             new OA\Response(response: 200, description: 'Zaktualizowano sprzęt'),
-            new OA\Response(response: 404, description: 'Nie znaleziono sprzętu')
+            new OA\Response(response: 404, description: 'Nie znaleziono sprzętu'),
+            new OA\Response(response: 401, description: 'Brak autoryzacji')
         ]
     )]
     public function update(Request $request, int $id): JsonResponse
@@ -135,12 +141,14 @@ class QuoteTableEquipmentController extends AbstractController
     #[Route('/{id}', name: 'quote_table_equipment_delete', methods: ['DELETE'])]
     #[OA\Delete(
         summary: 'Usuń sprzęt z tabelki',
+        tags: ['QuoteTableEquipment'],
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), example: 1)
         ],
         responses: [
             new OA\Response(response: 200, description: 'Usunięto sprzęt'),
-            new OA\Response(response: 404, description: 'Nie znaleziono sprzętu')
+            new OA\Response(response: 404, description: 'Nie znaleziono sprzętu'),
+            new OA\Response(response: 401, description: 'Brak autoryzacji')
         ]
     )]
     public function delete(int $id): JsonResponse
@@ -156,6 +164,7 @@ class QuoteTableEquipmentController extends AbstractController
     #[Route('/list/{tableId}', name: 'quote_table_equipment_list', methods: ['GET'])]
     #[OA\Get(
         summary: 'Pobierz wszystkie sprzęty dla tabelki',
+        tags: ['QuoteTableEquipment'],
         parameters: [
             new OA\Parameter(name: 'tableId', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), example: 1)
         ],
@@ -175,7 +184,8 @@ class QuoteTableEquipmentController extends AbstractController
                         ]
                     )
                 )
-            )
+            ),
+            new OA\Response(response: 401, description: 'Brak autoryzacji')
         ]
     )]
     public function list(int $tableId): JsonResponse
