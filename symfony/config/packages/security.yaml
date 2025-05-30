@@ -33,7 +33,9 @@ security:
         - { path: ^/api/doc, roles: PUBLIC_ACCESS }
         - { path: ^/api/person/login, roles: IS_AUTHENTICATED_ANONYMOUSLY }
         - { path: ^/api/person/logout, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/person$, roles: PUBLIC_ACCESS, methods: [POST] }
         - { path: ^/api/admin, roles: ROLE_ADMIN }
+        - { path: ^/api/person, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api, roles: ROLE_USER }
 
 

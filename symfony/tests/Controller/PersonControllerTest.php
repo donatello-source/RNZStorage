@@ -3,32 +3,23 @@
 namespace App\Tests\Controller;
 
 use App\Entity\Person;
-use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
-use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bundle\FrameworkBundle\KernelBrowser;
+use App\Tests\AuthenticatedWebTestCase;
 use Symfony\Component\HttpFoundation\Response;
 
-class PersonControllerTest extends WebTestCase
+class PersonControllerTest extends AuthenticatedWebTestCase
 {
-    private EntityManagerInterface $entityManager;
-    private KernelBrowser $client;
-
-    protected function setUp(): void
-    {
-        $this->client = static::createClient();
-        $this->entityManager = $this->client->getContainer()->get(EntityManagerInterface::class);
-    }
-
     public function testGetAllPersons(): void
     {
+        $this->logInSession();
         $this->client->request('GET', '/api/person');
-
         $this->assertResponseIsSuccessful();
         $this->assertJsonResponse($this->client->getResponse(), 200);
+        $this->assertIsArray(json_decode($this->client->getResponse()->getContent(), true));
     }
 
     public function testGetPersonById(): void
     {
+        $this->logInSession();
         $person = $this->createTestPerson();
 
         $this->client->request('GET', '/api/person/' . $person->getId());
@@ -41,6 +32,7 @@ class PersonControllerTest extends WebTestCase
 
     public function testAddPerson(): void
     {
+        // Dodawanie osoby nie wymaga autoryzacji!
         $data = [
             'imie' => 'Anna',
             'nazwisko' => 'Nowak',
@@ -77,8 +69,8 @@ class PersonControllerTest extends WebTestCase
     public function testLoginPerson(): void
     {
         $person = $this->createTestPerson('login@test.com', 'haslotest');
+        
 
-        // Prawidłowe dane logowania
         $this->client->request(
             'POST',
             '/api/person/login',
@@ -99,7 +91,7 @@ class PersonControllerTest extends WebTestCase
             ['CONTENT_TYPE' => 'application/json'],
             json_encode([])
         );
-        $this->assertResponseStatusCodeSame(Response::HTTP_BAD_REQUEST);
+        $this->assertResponseStatusCodeSame(Response::HTTP_UNAUTHORIZED);
 
         // Nieprawidłowe dane logowania
         $this->client->request(
@@ -121,6 +113,7 @@ class PersonControllerTest extends WebTestCase
         $person->setMail($email);
         $person->setHaslo(password_hash($plainPassword, PASSWORD_BCRYPT));
         $person->setStanowisko('Tester');
+        $person->setRoles(['ROLE_USER']);
 
         $this->entityManager->persist($person);
         $this->entityManager->flush();

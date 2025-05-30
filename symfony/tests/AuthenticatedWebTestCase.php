@@ -24,7 +24,7 @@ abstract class AuthenticatedWebTestCase extends WebTestCase
             $user->setNazwisko('User');
             $user->setMail('test@example.com');
             $user->setStanowisko('admin');
-            $user->setRoles(['ROLE_USER', 'ROLE_ADMIN']);
+            $user->setRoles(['ROLE_USER']);
             $passwordHasher = self::getContainer()->get(\Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface::class);
             $user->setHaslo($passwordHasher->hashPassword($user, 'testpassword'));
             $this->entityManager->persist($user);
