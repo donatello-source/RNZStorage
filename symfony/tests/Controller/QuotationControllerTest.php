@@ -2,102 +2,266 @@
 
 namespace App\Tests\Controller;
 
-use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use App\Entity\Company;
+use App\Entity\Quote;
+use App\Entity\Equipment;
+use App\Entity\Category;
+use App\Tests\AuthenticatedWebTestCase;
+use Symfony\Component\HttpFoundation\Response;
 
-class QuotationControllerTest extends WebTestCase
+class QuotationControllerTest extends AuthenticatedWebTestCase
 {
-    public function testGetQuotations(): void
+    public function testGetAllQuotations(): void
     {
-        $client = static::createClient();
-        $client->request('GET', '/api/quotation');
-
+        $this->logInSession();
+        $this->client->request('GET', '/api/quotation');
         $this->assertResponseIsSuccessful();
-        $this->assertResponseFormatSame('json');
+        $this->assertJsonResponse($this->client->getResponse(), 200);
+        $this->assertIsArray(json_decode($this->client->getResponse()->getContent(), true));
     }
-
-    // public function testAddQuotation(): void
-    // {
-    //     $client = static::createClient();
-    //     $client->request('POST', '/api/quotation', [
-    //         'json' => [
-    //             'company' => 1,
-    //             'status' => 'w trakcie',
-    //             'data_wystawienia' => '2024-01-01',
-    //             'data_poczatek' => '2024-01-10',
-    //             'data_koniec' => '2024-01-20',
-    //             'dane_kontaktowe' => 'Jan Kowalski, 123456789',
-    //             'miejsce' => 'Warszawa',
-    //             'rabat' => '5.00',
-    //             'dodatkowe_informacje' => 'Opcjonalne',
-    //         ],
-    //     ]);
-
-    //     $this->assertResponseStatusCodeSame(201);
-    //     $data = json_decode($client->getResponse()->getContent(), true);
-    //     $this->assertArrayHasKey('data', $data);
-    //     $this->assertArrayHasKey('id', $data['data']);
-    // }
 
     public function testGetQuotationById(): void
     {
-        $client = static::createClient();
-        $client->request('GET', '/api/quotation/1');
+        $this->logInSession();
+        $company = $this->createTestCompany();
+        $quote = $this->createTestQuote($company);
 
-        if ($client->getResponse()->getStatusCode() === 200) {
-            $this->assertResponseFormatSame('json');
-            $data = json_decode($client->getResponse()->getContent(), true);
-            $this->assertArrayHasKey('id', $data);
-        } else {
-            $this->assertResponseStatusCodeSame(404);
-        }
-    }
-
-    // public function testDeleteQuotation(): void
-    // {
-    //     $client = static::createClient();
-
-    //     $client->request('POST', '/api/quotation', [
-    //         'json' => [
-    //             'company' => 1,
-    //             'status' => 'w trakcie',
-    //             'data_wystawienia' => '2024-01-01',
-    //             'data_poczatek' => '2024-01-10',
-    //             'data_koniec' => '2024-01-20',
-    //             'dane_kontaktowe' => 'Jan Kowalski, 123456789',
-    //             'miejsce' => 'Warszawa',
-    //             'rabat' => '5.00',
-    //             'dodatkowe_informacje' => 'Opcjonalne',
-    //         ],
-    //     ]);
-
-    //     $responseData = json_decode($client->getResponse()->getContent(), true);
-    //     $quoteId = $responseData['data']['id'];
-
-    //     $client->request('DELETE', "/api/quotation/{$quoteId}");
-
-    //     $this->assertResponseStatusCodeSame(200);
-    //     $this->assertJsonContains(['message' => 'Wycena została usunięta']);
-    // }
-
-    public function testGetQuotationEquipment(): void
-    {
-        $client = static::createClient();
-        $client->request('GET', '/api/quotation/equipment');
-
+        $this->client->request('GET', '/api/quotation/' . $quote->getId());
         $this->assertResponseIsSuccessful();
-        $this->assertResponseFormatSame('json');
+        $this->assertJsonResponse($this->client->getResponse(), 200);
+
+        $this->client->request('GET', '/api/quotation/99999');
+        $this->assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
     }
 
-    // public function testGetQuotationEquipmentById(): void
-    // {
-    //     $client = static::createClient();
-    //     $client->request('GET', '/api/quotation/equipment/1');
+    public function testAddQuotation(): void
+    {
+        $this->logInSession();
+        $company = $this->createTestCompany();
 
-    //     if ($client->getResponse()->getStatusCode() === 200) {
-    //         $data = json_decode($client->getResponse()->getContent(), true);
-    //         $this->assertArrayHasKey('idEquipment', $data);
-    //     } else {
-    //         $this->assertResponseStatusCodeSame(404);
-    //     }
-    // }
+        $category = new Category();
+        $category->setNazwa('Monitory');
+        $this->entityManager->persist($category);
+
+        $equipment = new Equipment();
+        $equipment->setName('Monitor Dell');
+        $equipment->setCategoryId($category->getId());
+        $equipment->setPrice(1000);
+        $equipment->setQuantity(10);
+        $equipment->setDescription('Testowy monitor');
+        $this->entityManager->persist($equipment);
+
+        $this->entityManager->flush();
+
+        $data = [
+            'company_id' => $company->getId(),
+            'projekt' => 'Test Projekt',
+            'lokalizacja' => 'Warszawa',
+            'rabatCalkowity' => 5,
+            'daty' => [
+                [
+                    'type' => 'single',
+                    'value' => '2025-06-01',
+                    'comment' => 'Montaż'
+                ]
+            ],
+            'tabele' => [
+                [
+                    'kategoria' => 'Sala A',
+                    'rabatTabelki' => 0,
+                    'sprzety' => [
+                        [
+                            'id' => $equipment->getId(),
+                            'ilosc' => 2,
+                            'dni' => 1,
+                            'rabat' => 0,
+                            'showComment' => false
+                        ]
+                    ]
+                ]
+            ]
+        ];
+
+        $this->client->request(
+            'POST',
+            '/api/quotation',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode($data)
+        );
+        $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
+
+        // Błędne dane (brak wymaganych pól)
+        $this->client->request(
+            'POST',
+            '/api/quotation',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode([])
+        );
+        $this->assertResponseStatusCodeSame(Response::HTTP_BAD_REQUEST);
+    }
+
+    public function testDeleteQuotation(): void
+    {
+        $this->logInSession();
+        $company = $this->createTestCompany();
+        $quote = $this->createTestQuote($company);
+
+        $this->client->request('DELETE', '/api/quotation/' . $quote->getId());
+        $this->assertResponseStatusCodeSame(Response::HTTP_OK);
+
+        $this->client->request('DELETE', '/api/quotation/99999');
+        $this->assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
+    }
+
+    public function testUpdateQuotationStatus(): void
+    {
+        $this->logInSession();
+        $company = $this->createTestCompany();
+        $quote = $this->createTestQuote($company);
+
+        $this->client->request(
+            'PATCH',
+            '/api/quotation/' . $quote->getId() . '/status',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode(['status' => 'przyjęta'])
+        );
+        $this->assertResponseIsSuccessful();
+
+        // Brak statusu
+        $this->client->request(
+            'PATCH',
+            '/api/quotation/' . $quote->getId() . '/status',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode([])
+        );
+        $this->assertResponseStatusCodeSame(Response::HTTP_BAD_REQUEST);
+
+        // Nieistniejąca wycena
+        $this->client->request(
+            'PATCH',
+            '/api/quotation/99999/status',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode(['status' => 'przyjęta'])
+        );
+        $this->assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
+    }
+
+    public function testUpdateQuotation(): void
+    {
+        $this->logInSession();
+        $company = $this->createTestCompany();
+        $quote = $this->createTestQuote($company);
+
+        // Dodaj kategorię i sprzęt do bazy
+        $category = new Category();
+        $category->setNazwa('Monitory');
+        $this->entityManager->persist($category);
+
+        $equipment = new Equipment();
+        $equipment->setName('Monitor Dell');
+        $equipment->setCategoryId($category->getId());
+        $equipment->setPrice(1000);
+        $equipment->setQuantity(10);
+        $equipment->setDescription('Testowy monitor');
+        $this->entityManager->persist($equipment);
+
+        $this->entityManager->flush();
+
+        $data = [
+            'company_id' => $company->getId(),
+            'projekt' => 'Test Projekt',
+            'lokalizacja' => 'Warszawa',
+            'rabatCalkowity' => 5,
+            'daty' => [
+                [
+                    'type' => 'single',
+                    'value' => '2025-06-01',
+                    'comment' => 'Montaż'
+                ]
+            ],
+            'tabele' => [
+                [
+                    'kategoria' => 'Sala A',
+                    'rabatTabelki' => 0,
+                    'sprzety' => [
+                        [
+                            'id' => $equipment->getId(), // użyj ID utworzonego sprzętu
+                            'ilosc' => 2,
+                            'dni' => 1,
+                            'rabat' => 0,
+                            'showComment' => false
+                        ]
+                    ]
+                ]
+            ]
+        ];
+
+        $this->client->request(
+            'PATCH',
+            '/api/quotation/' . $quote->getId(),
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode($data)
+        );
+        $this->assertResponseIsSuccessful();
+
+        // Nieistniejąca wycena
+        $this->client->request(
+            'PATCH',
+            '/api/quotation/99999',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode($data)
+        );
+        $this->assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
+    }
+
+    private function createTestCompany(): Company
+    {
+        $company = new Company();
+        $company->setNazwa('Firma Testowa');
+        $company->setNip('1234567890');
+        $company->setAdres('ul. Testowa 1, Warszawa');
+        $company->setTelefon('123-456-789');
+        $this->entityManager->persist($company);
+        $this->entityManager->flush();
+        $this->entityManager->refresh($company);
+        $this->assertNotNull($company->getId(), 'Company ID nie może być null');
+        return $company;
+    }
+
+    private function createTestQuote(Company $company): Quote
+    {
+        $quote = new Quote();
+        $quote->setCompany($company);
+        $quote->setProjekt('Projekt Testowy');
+        $quote->setLokalizacja('Warszawa');
+        $quote->setStatus('nowa');
+        $quote->setDataWystawienia(new \DateTime());
+        $quote->setGlobalDiscount(10);
+        $this->entityManager->persist($quote);
+        $this->entityManager->flush();
+        return $quote;
+    }
+
+    private function assertJsonResponse($response, int $statusCode): void
+    {
+        $this->assertEquals($statusCode, $response->getStatusCode());
+        $this->assertTrue(
+            $response->headers->contains('Content-Type', 'application/json'),
+            'Brak nagłówka Content-Type: application/json'
+        );
+    }
 }

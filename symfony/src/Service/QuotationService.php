@@ -36,7 +36,11 @@ class QuotationService
 
     public function addQuote(array $data): Quote
     {
-        $company = $this->em->getRepository(Company::class)->find($data['zamawiajacy']);
+        $companyId = $data['company_id'] ?? $data['zamawiajacy'] ?? null;
+        if (!$companyId) {
+            throw new BadRequestHttpException('Brak company_id');
+        }
+        $company = $this->em->getRepository(Company::class)->find($companyId);
         if (!$company) {
             throw new BadRequestHttpException('Company not found');
         }
