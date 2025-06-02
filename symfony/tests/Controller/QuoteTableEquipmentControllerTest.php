@@ -54,7 +54,6 @@ class QuoteTableEquipmentControllerTest extends AuthenticatedWebTestCase
         $this->logInSession();
         [$company, $quote, $table, $equipment] = $this->prepareEntities();
 
-        // Dodaj sprzęt do tabelki
         $data = [
             'quote_table_id' => $table->getId(),
             'equipment_id' => $equipment->getId(),
@@ -74,13 +73,11 @@ class QuoteTableEquipmentControllerTest extends AuthenticatedWebTestCase
         $response = json_decode($this->client->getResponse()->getContent(), true);
         $qteId = $response['id'];
 
-        // Pobierz po ID
         $this->client->request('GET', '/api/quote-table-equipment/' . $qteId);
         $this->assertResponseIsSuccessful();
         $response = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertEquals(2, $response['count']);
 
-        // Nieistniejący sprzęt
         $this->client->request('GET', '/api/quote-table-equipment/99999');
         $this->assertResponseStatusCodeSame(404);
     }
@@ -90,7 +87,6 @@ class QuoteTableEquipmentControllerTest extends AuthenticatedWebTestCase
         $this->logInSession();
         [$company, $quote, $table, $equipment] = $this->prepareEntities();
 
-        // Dodaj sprzęt do tabelki
         $data = [
             'quote_table_id' => $table->getId(),
             'equipment_id' => $equipment->getId(),
@@ -110,7 +106,6 @@ class QuoteTableEquipmentControllerTest extends AuthenticatedWebTestCase
         $response = json_decode($this->client->getResponse()->getContent(), true);
         $qteId = $response['id'];
 
-        // Aktualizuj sprzęt
         $updateData = [
             'count' => 5,
             'days' => 1,
@@ -127,7 +122,6 @@ class QuoteTableEquipmentControllerTest extends AuthenticatedWebTestCase
         );
         $this->assertResponseIsSuccessful();
 
-        // Nieistniejący sprzęt
         $this->client->request(
             'PUT',
             '/api/quote-table-equipment/99999',
@@ -144,7 +138,6 @@ class QuoteTableEquipmentControllerTest extends AuthenticatedWebTestCase
         $this->logInSession();
         [$company, $quote, $table, $equipment] = $this->prepareEntities();
 
-        // Dodaj sprzęt do tabelki
         $data = [
             'quote_table_id' => $table->getId(),
             'equipment_id' => $equipment->getId(),
@@ -164,11 +157,9 @@ class QuoteTableEquipmentControllerTest extends AuthenticatedWebTestCase
         $response = json_decode($this->client->getResponse()->getContent(), true);
         $qteId = $response['id'];
 
-        // Usuń sprzęt
         $this->client->request('DELETE', '/api/quote-table-equipment/' . $qteId);
         $this->assertResponseIsSuccessful();
 
-        // Nieistniejący sprzęt
         $this->client->request('DELETE', '/api/quote-table-equipment/99999');
         $this->assertResponseStatusCodeSame(404);
     }
@@ -207,7 +198,6 @@ class QuoteTableEquipmentControllerTest extends AuthenticatedWebTestCase
             $this->assertResponseStatusCodeSame(201);
         }
 
-        // Pobierz listę
         $this->client->request('GET', '/api/quote-table-equipment/list/' . $table->getId());
         $this->assertResponseIsSuccessful();
         $response = json_decode($this->client->getResponse()->getContent(), true);
@@ -215,7 +205,6 @@ class QuoteTableEquipmentControllerTest extends AuthenticatedWebTestCase
         $this->assertCount(2, $response);
     }
 
-    // Pomocnicza metoda do przygotowania encji
     private function prepareEntities(): array
     {
         $company = new Company();

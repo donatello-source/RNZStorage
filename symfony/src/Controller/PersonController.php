@@ -145,34 +145,4 @@ final class PersonController extends AbstractController
         return $this->json(['message' => 'Dodano nową osobę', 'data' => $person], 201);
     }
     
-    
-    // #[Route('/login', name: 'login_person', methods: ['POST'])]
-    // #[OA\Post(
-    //     summary: 'Logowanie osoby',
-    //     requestBody: new OA\RequestBody(
-    //         required: true,
-    //         content: new OA\JsonContent(
-    //             required: ['mail', 'haslo'],
-    //             properties: [
-    //                 new OA\Property(property: 'mail', type: 'string', example: 'anna.nowak@example.com'),
-    //                 new OA\Property(property: 'haslo', type: 'string', example: 'superhaslo123')
-    //             ]
-    //         )
-    //     ),
-    //     responses: [
-    //         new OA\Response(response: 200, description: 'Zalogowano poprawnie'),
-    //         new OA\Response(response: 400, description: 'Brak wymaganych danych'),
-    //         new OA\Response(response: 401, description: 'Nieprawidłowy email lub hasło')
-    //     ]
-    // )]
-    // #[OA\Tag(name: 'Osoby')]
-    // public function loginPerson(Request $request): JsonResponse
-    // {
-    //     $data = json_decode($request->getContent(), true);
-    //     $person = $this->personService->login($data);
-    
-    //     // TODO: JWT Token logic
-    //     return $this->json(['message' => 'Zalogowano pomyślnie', 'data' => $person]);
-    // }
-    
 }

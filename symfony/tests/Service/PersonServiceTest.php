@@ -48,7 +48,7 @@ class PersonServiceTest extends TestCase
     public function testCreateThrowsExceptionWhenMissingFields(): void
     {
         $this->expectException(BadRequestHttpException::class);
-        $this->personService->create(['imie' => 'Jan']); // za mało danych
+        $this->personService->create(['imie' => 'Jan']);
     }
 
     public function testCreateReturnsPerson(): void

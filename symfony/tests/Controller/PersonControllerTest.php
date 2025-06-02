@@ -32,7 +32,6 @@ class PersonControllerTest extends AuthenticatedWebTestCase
 
     public function testAddPerson(): void
     {
-        // Dodawanie osoby nie wymaga autoryzacji!
         $data = [
             'imie' => 'Anna',
             'nazwisko' => 'Nowak',
@@ -54,7 +53,6 @@ class PersonControllerTest extends AuthenticatedWebTestCase
         $response = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertEquals('Dodano nową osobę', $response['message']);
 
-        // Brak wymaganych danych
         $this->client->request(
             'POST',
             '/api/person',
@@ -82,7 +80,6 @@ class PersonControllerTest extends AuthenticatedWebTestCase
         $this->assertResponseStatusCodeSame(Response::HTTP_OK);
         $this->assertJsonResponse($this->client->getResponse(), 200);
 
-        // Brak danych
         $this->client->request(
             'POST',
             '/api/person/login',
@@ -93,7 +90,6 @@ class PersonControllerTest extends AuthenticatedWebTestCase
         );
         $this->assertResponseStatusCodeSame(Response::HTTP_UNAUTHORIZED);
 
-        // Nieprawidłowe dane logowania
         $this->client->request(
             'POST',
             '/api/person/login',

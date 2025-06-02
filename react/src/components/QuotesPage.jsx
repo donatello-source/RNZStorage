@@ -71,7 +71,6 @@ const QuotesPage = () => {
         body: JSON.stringify({ status }),
       });
       if (!res.ok) throw new Error('Błąd zmiany statusu');
-      // Odśwież listę wycen
       const updated = quotes.map(q =>
         q.id === selectedQuote.id ? { ...q, status } : q
       );
@@ -172,7 +171,6 @@ const QuotesPage = () => {
                 variant="outlined"
                 onClick={() => {
                   setShowModal(false);
-                  // Przekierowanie do podglądu
                   window.location.href = `/quote/${selectedQuote.id}/edit`;
                 }}
               >

@@ -92,7 +92,6 @@ class QuotationControllerTest extends AuthenticatedWebTestCase
         );
         $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
 
-        // Błędne dane (brak wymaganych pól)
         $this->client->request(
             'POST',
             '/api/quotation',
@@ -133,7 +132,6 @@ class QuotationControllerTest extends AuthenticatedWebTestCase
         );
         $this->assertResponseIsSuccessful();
 
-        // Brak statusu
         $this->client->request(
             'PATCH',
             '/api/quotation/' . $quote->getId() . '/status',
@@ -144,7 +142,6 @@ class QuotationControllerTest extends AuthenticatedWebTestCase
         );
         $this->assertResponseStatusCodeSame(Response::HTTP_BAD_REQUEST);
 
-        // Nieistniejąca wycena
         $this->client->request(
             'PATCH',
             '/api/quotation/99999/status',
@@ -162,7 +159,6 @@ class QuotationControllerTest extends AuthenticatedWebTestCase
         $company = $this->createTestCompany();
         $quote = $this->createTestQuote($company);
 
-        // Dodaj kategorię i sprzęt do bazy
         $category = new Category();
         $category->setNazwa('Monitory');
         $this->entityManager->persist($category);
@@ -195,7 +191,7 @@ class QuotationControllerTest extends AuthenticatedWebTestCase
                     'rabatTabelki' => 0,
                     'sprzety' => [
                         [
-                            'id' => $equipment->getId(), // użyj ID utworzonego sprzętu
+                            'id' => $equipment->getId(),
                             'ilosc' => 2,
                             'dni' => 1,
                             'rabat' => 0,
@@ -216,7 +212,6 @@ class QuotationControllerTest extends AuthenticatedWebTestCase
         );
         $this->assertResponseIsSuccessful();
 
-        // Nieistniejąca wycena
         $this->client->request(
             'PATCH',
             '/api/quotation/99999',

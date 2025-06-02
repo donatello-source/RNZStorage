@@ -18,7 +18,7 @@ class QuoteDate
     private ?Quote $quote = null;
 
     #[ORM\Column(length: 20)]
-    private ?string $type = null; // 'single' lub 'range'
+    private ?string $type = null;
 
     #[ORM\Column(length: 100)]
     private ?string $value = null; 

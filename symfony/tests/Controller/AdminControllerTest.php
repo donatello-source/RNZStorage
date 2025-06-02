@@ -34,7 +34,6 @@ class AdminControllerTest extends AuthenticatedWebTestCase
         $this->setTestUserRoles(['ROLE_ADMIN']);
         $this->logInSession();
 
-        // Dodaj drugiego użytkownika
         $user = $this->createTestPerson('otheruser@example.com', 'password', ['ROLE_USER']);
 
         $data = ['roles' => 'ROLE_ADMIN'];

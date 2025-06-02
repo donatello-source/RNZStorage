@@ -20,7 +20,6 @@ const EquipmentPage = () => {
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('');
 
-  // Pobierz sprzęt
   useEffect(() => {
     const fetchEquipments = async () => {
       setIsLoading(true);

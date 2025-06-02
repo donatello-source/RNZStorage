@@ -77,7 +77,6 @@ const CreateQuotePage = () => {
   const handleSubmit = async e => {
     e.preventDefault();
 
-    // Przygotuj dane do wysłania (tylko potrzebne pola)
     const dataToSave = {
       zamawiajacy,
       projekt,
@@ -115,7 +114,6 @@ const CreateQuotePage = () => {
 
       const result = await res.json();
       alert('Wycena zapisana! ID: ' + result.id);
-      // Możesz przekierować lub wyczyścić formularz tutaj
     } catch (err) {
       alert('Błąd połączenia z serwerem');
     }
@@ -562,7 +560,7 @@ const CreateQuotePage = () => {
                   equipmentTables
                     .flatMap(table => table.items)
                     .filter(item => item.pricing_info)
-                    .map(item => [item.id, item]) // Mapuje po id sprzętu
+                    .map(item => [item.id, item])
                 ).values()].map(item => (
                   <Box key={item.id} sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                     <Box sx={{ flex: 1 }}>
@@ -573,7 +571,6 @@ const CreateQuotePage = () => {
                         type="checkbox"
                         checked={item.showComment}
                         onChange={e => {
-                          // Zmień showComment we wszystkich tabelkach dla tego sprzętu
                           const newTables = equipmentTables.map(table => ({
                             ...table,
                             items: table.items.map(i =>

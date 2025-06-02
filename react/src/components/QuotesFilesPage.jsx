@@ -48,7 +48,6 @@ const QuotesFilesPage = () => {
       const data = await res.json();
       setTreeData(data);
 
-      // Pobierz nazwę folderu, jeśli nie jesteś w głównym
       if (parentId && parentId !== 0) {
         const folderRes = await fetch(`/api/upload/${parentId}`);
         if (folderRes.ok) {
@@ -92,7 +91,6 @@ const QuotesFilesPage = () => {
     }
   };
 
-  // Tworzenie folderu
   const handleCreateFolder = async () => {
     try {
       await fetch('/api/upload/folder', {
@@ -108,7 +106,6 @@ const QuotesFilesPage = () => {
     }
   };
 
-  // Zmiana nazwy
   const handleRename = async () => {
     try {
       await fetch(`/api/upload/${renameTarget}/rename`, {
@@ -125,7 +122,6 @@ const QuotesFilesPage = () => {
     }
   };
 
-  // Usuwanie pliku/folderu
   const handleDelete = async () => {
     try {
       await fetch(`/api/upload/${deleteTarget}`, {
@@ -138,7 +134,6 @@ const QuotesFilesPage = () => {
     }
   };
 
-  // Drag&Drop
   const handleDrop = async (draggedId, targetId) => {
     if (!draggedId || !targetId || draggedId === targetId) return;
     await fetch(`/api/upload/${draggedId}/move`, {
@@ -158,7 +153,6 @@ const QuotesFilesPage = () => {
       return;
     }
 
-    // Dodaj do listy uploadowanych
     setUploadingFiles(prev => [...prev, { name: file.name, status: 'uploading', id: null }]);
 
     const formData = new FormData();
@@ -173,12 +167,10 @@ const QuotesFilesPage = () => {
       if (!res.ok) throw new Error('Błąd wysyłania pliku');
       const data = await res.json();
 
-      // Aktualizuj id uploadu
       setUploadingFiles(prev => prev.map(f =>
         f.name === file.name && !f.id ? { ...f, id: data.id } : f
       ));
 
-      // Polling statusu
       pollUploadStatus(data.id, file.name);
     } catch (e) {
       setUploadingFiles(prev => prev.filter(f => f.name !== file.name));

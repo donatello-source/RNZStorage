@@ -34,7 +34,6 @@ class CategoryControllerTest extends AuthenticatedWebTestCase
         $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
         $this->assertJsonResponse($this->client->getResponse(), 201);
 
-        // Test błędnego żądania (brak nazwy)
         $this->client->request(
             'POST',
             '/api/category',
@@ -57,7 +56,6 @@ class CategoryControllerTest extends AuthenticatedWebTestCase
         $this->client->request('DELETE', '/api/category/' . $category->getId());
         $this->assertResponseStatusCodeSame(Response::HTTP_OK);
 
-        // Próba usunięcia nieistniejącej kategorii
         $this->client->request('DELETE', '/api/category/99999');
         $this->assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
     }

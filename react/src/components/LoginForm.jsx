@@ -69,10 +69,8 @@ function LoginForm() {
 
         const data = await response.json();
         if (response.ok) {
-          console.log(data);
           setSnackbar({ open: true, message: `Witaj ${data.data.imie} ${data.data.nazwisko}!`, severity: 'success' });
           localStorage.setItem('user', JSON.stringify(data.data));
-          console.log(data.data);
           setTimeout(() => {
             if (data.data.role.includes('ROLE_ADMIN')) {
               navigate('/admin');

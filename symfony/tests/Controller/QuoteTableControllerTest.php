@@ -33,7 +33,6 @@ class QuoteTableControllerTest extends AuthenticatedWebTestCase
         $response = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertArrayHasKey('id', $response);
 
-        // Błędny quote_id
         $data['quote_id'] = 99999;
         $this->client->request(
             'POST',
@@ -52,7 +51,6 @@ class QuoteTableControllerTest extends AuthenticatedWebTestCase
         $company = $this->createTestCompany();
         $quote = $this->createTestQuote($company);
 
-        // Najpierw dodaj tabelkę
         $data = [
             'quote_id' => $quote->getId(),
             'label' => 'Sala A',
@@ -69,13 +67,11 @@ class QuoteTableControllerTest extends AuthenticatedWebTestCase
         $response = json_decode($this->client->getResponse()->getContent(), true);
         $tableId = $response['id'];
 
-        // Pobierz po ID
         $this->client->request('GET', '/api/quote-table/' . $tableId);
         $this->assertResponseIsSuccessful();
         $response = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertEquals('Sala A', $response['label']);
 
-        // Nieistniejąca tabelka
         $this->client->request('GET', '/api/quote-table/99999');
         $this->assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
     }
@@ -86,7 +82,6 @@ class QuoteTableControllerTest extends AuthenticatedWebTestCase
         $company = $this->createTestCompany();
         $quote = $this->createTestQuote($company);
 
-        // Dodaj tabelkę
         $data = [
             'quote_id' => $quote->getId(),
             'label' => 'Sala A',
@@ -103,7 +98,6 @@ class QuoteTableControllerTest extends AuthenticatedWebTestCase
         $response = json_decode($this->client->getResponse()->getContent(), true);
         $tableId = $response['id'];
 
-        // Aktualizuj tabelkę
         $updateData = [
             'label' => 'Sala B',
             'discount' => 10
@@ -118,7 +112,6 @@ class QuoteTableControllerTest extends AuthenticatedWebTestCase
         );
         $this->assertResponseIsSuccessful();
 
-        // Nieistniejąca tabelka
         $this->client->request(
             'PUT',
             '/api/quote-table/99999',
@@ -136,7 +129,6 @@ class QuoteTableControllerTest extends AuthenticatedWebTestCase
         $company = $this->createTestCompany();
         $quote = $this->createTestQuote($company);
 
-        // Dodaj tabelkę
         $data = [
             'quote_id' => $quote->getId(),
             'label' => 'Sala A',
@@ -153,11 +145,9 @@ class QuoteTableControllerTest extends AuthenticatedWebTestCase
         $response = json_decode($this->client->getResponse()->getContent(), true);
         $tableId = $response['id'];
 
-        // Usuń tabelkę
         $this->client->request('DELETE', '/api/quote-table/' . $tableId);
         $this->assertResponseIsSuccessful();
 
-        // Nieistniejąca tabelka
         $this->client->request('DELETE', '/api/quote-table/99999');
         $this->assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
     }
@@ -168,7 +158,6 @@ class QuoteTableControllerTest extends AuthenticatedWebTestCase
         $company = $this->createTestCompany();
         $quote = $this->createTestQuote($company);
 
-        // Dodaj dwie tabelki
         foreach ([['Sala A', 5], ['Sala B', 10]] as [$label, $discount]) {
             $data = [
                 'quote_id' => $quote->getId(),
@@ -186,7 +175,6 @@ class QuoteTableControllerTest extends AuthenticatedWebTestCase
             $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
         }
 
-        // Pobierz listę
         $this->client->request('GET', '/api/quote-table/list/' . $quote->getId());
         $this->assertResponseIsSuccessful();
         $response = json_decode($this->client->getResponse()->getContent(), true);
@@ -194,7 +182,6 @@ class QuoteTableControllerTest extends AuthenticatedWebTestCase
         $this->assertCount(2, $response);
     }
 
-    // Pomocnicze metody
     private function createTestCompany(): Company
     {
         $company = new Company();

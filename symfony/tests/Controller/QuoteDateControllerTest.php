@@ -36,7 +36,6 @@ class QuoteDateControllerTest extends AuthenticatedWebTestCase
         $response = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertArrayHasKey('id', $response);
 
-        // Błędny quote_id
         $data['quote_id'] = 99999;
         $this->client->request(
             'POST',
@@ -55,7 +54,6 @@ class QuoteDateControllerTest extends AuthenticatedWebTestCase
         $company = $this->createTestCompany();
         $quote = $this->createTestQuote($company);
 
-        // Najpierw dodaj datę
         $dateData = [
             'quote_id' => $quote->getId(),
             'type' => 'single',
@@ -73,13 +71,11 @@ class QuoteDateControllerTest extends AuthenticatedWebTestCase
         $response = json_decode($this->client->getResponse()->getContent(), true);
         $dateId = $response['id'];
 
-        // Pobierz po ID
         $this->client->request('GET', '/api/quote-date/' . $dateId);
         $this->assertResponseIsSuccessful();
         $response = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertEquals('single', $response['type']);
 
-        // Nieistniejąca data
         $this->client->request('GET', '/api/quote-date/99999');
         $this->assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
     }
@@ -90,7 +86,6 @@ class QuoteDateControllerTest extends AuthenticatedWebTestCase
         $company = $this->createTestCompany();
         $quote = $this->createTestQuote($company);
 
-        // Dodaj datę
         $dateData = [
             'quote_id' => $quote->getId(),
             'type' => 'single',
@@ -108,7 +103,6 @@ class QuoteDateControllerTest extends AuthenticatedWebTestCase
         $response = json_decode($this->client->getResponse()->getContent(), true);
         $dateId = $response['id'];
 
-        // Aktualizuj datę
         $updateData = [
             'type' => 'range',
             'value' => '2025-06-01 - 2025-06-03',
@@ -124,7 +118,6 @@ class QuoteDateControllerTest extends AuthenticatedWebTestCase
         );
         $this->assertResponseIsSuccessful();
 
-        // Nieistniejąca data
         $this->client->request(
             'PUT',
             '/api/quote-date/99999',
@@ -142,7 +135,6 @@ class QuoteDateControllerTest extends AuthenticatedWebTestCase
         $company = $this->createTestCompany();
         $quote = $this->createTestQuote($company);
 
-        // Dodaj datę
         $dateData = [
             'quote_id' => $quote->getId(),
             'type' => 'single',
@@ -160,11 +152,9 @@ class QuoteDateControllerTest extends AuthenticatedWebTestCase
         $response = json_decode($this->client->getResponse()->getContent(), true);
         $dateId = $response['id'];
 
-        // Usuń datę
         $this->client->request('DELETE', '/api/quote-date/' . $dateId);
         $this->assertResponseIsSuccessful();
 
-        // Nieistniejąca data
         $this->client->request('DELETE', '/api/quote-date/99999');
         $this->assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
     }
@@ -175,7 +165,6 @@ class QuoteDateControllerTest extends AuthenticatedWebTestCase
         $company = $this->createTestCompany();
         $quote = $this->createTestQuote($company);
 
-        // Dodaj dwie daty
         foreach ([['single', '2025-06-01'], ['range', '2025-06-01 - 2025-06-03']] as [$type, $value]) {
             $dateData = [
                 'quote_id' => $quote->getId(),
@@ -194,7 +183,6 @@ class QuoteDateControllerTest extends AuthenticatedWebTestCase
             $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
         }
 
-        // Pobierz listę
         $this->client->request('GET', '/api/quote-date/list/' . $quote->getId());
         $this->assertResponseIsSuccessful();
         $response = json_decode($this->client->getResponse()->getContent(), true);
@@ -202,7 +190,6 @@ class QuoteDateControllerTest extends AuthenticatedWebTestCase
         $this->assertCount(2, $response);
     }
 
-    // Pomocnicze metody
     private function createTestCompany(): Company
     {
         $company = new Company();

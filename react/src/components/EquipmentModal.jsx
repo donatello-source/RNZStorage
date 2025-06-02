@@ -49,7 +49,6 @@ const EquipmentModal = ({ open, onClose, equipment, onSave }) => {
   };
 
   const handleSave = async () => {
-    console.log(formData);
     const url = formData.id ? `/api/equipment/${formData.id}` : '/api/equipment';
     const method = formData.id ? 'PUT' : 'POST';
   

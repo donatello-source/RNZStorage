@@ -94,7 +94,8 @@ const QuoteEditPage = () => {
         setEquipmentTables(data.tabele || []);
         setGlobalDiscount(data.rabatCalkowity || 0);
       } catch (e) {
-        // obsłuż błąd
+        console.error('Błąd pobierania wyceny:', e);
+        alert('Błąd pobierania wyceny');
       }
     };
     fetchQuote();

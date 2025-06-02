@@ -18,7 +18,6 @@ const EquipmentCard = ({ equipment }) => {
         </CardContent>
       </Card>
       <EquipmentModal open={open} onClose={() => setOpen(false)} equipment={equipment} onSave={(updatedEquipment) => {
-        console.log('Zapisano zmiany:', updatedEquipment);
       }} />
     </>
   );

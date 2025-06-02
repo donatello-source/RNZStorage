@@ -15,7 +15,6 @@ abstract class AuthenticatedWebTestCase extends WebTestCase
         $this->client = static::createClient();
         $this->entityManager = $this->client->getContainer()->get(EntityManagerInterface::class);
 
-        // Tworzenie użytkownika testowego (jeśli nie istnieje)
         $repo = $this->entityManager->getRepository(\App\Entity\Person::class);
         $user = $repo->findOneBy(['mail' => 'test@example.com']);
         if (!$user) {

@@ -78,7 +78,7 @@ class QuoteDateServiceTest extends TestCase
         $this->entityManagerMock->expects($this->once())->method('flush');
 
         $this->service->delete($date);
-        $this->assertTrue(true); // brak wyjątków = OK
+        $this->assertTrue(true);
     }
 
     public function testFindByQuoteReturnsArray(): void

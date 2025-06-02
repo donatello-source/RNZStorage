@@ -41,7 +41,6 @@ class EquipmentControllerTest extends AuthenticatedWebTestCase
         $response = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertEquals('Monitor Dell', $response['data']['name']);
 
-        // Invalid request
         $this->client->request('POST', '/api/equipment', [], [], ['CONTENT_TYPE' => 'application/json'], json_encode([]));
         $this->assertResponseStatusCodeSame(Response::HTTP_BAD_REQUEST);
     }
