@@ -10,11 +10,15 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
+use Doctrine\ORM\EntityManagerInterface;
 
 #[Route('/api/quote-table-equipment')]
 class QuoteTableEquipmentController extends AbstractController
 {
-    public function __construct(private readonly QuoteTableEquipmentService $service) {}
+    public function __construct(
+        private readonly QuoteTableEquipmentService $service,
+        private readonly EntityManagerInterface $em
+    ) {}
 
     #[Route('/create', name: 'quote_table_equipment_create', methods: ['POST'])]
     #[OA\Post(
@@ -43,8 +47,8 @@ class QuoteTableEquipmentController extends AbstractController
     public function create(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
-        $table = $this->getDoctrine()->getRepository(QuoteTable::class)->find($data['quote_table_id']);
-        $equipment = $this->getDoctrine()->getRepository(Equipment::class)->find($data['equipment_id']);
+        $table = $this->em->getRepository(QuoteTable::class)->find($data['quote_table_id']);
+        $equipment = $this->em->getRepository(Equipment::class)->find($data['equipment_id']);
         if (!$table || !$equipment) {
             return $this->json(['error' => 'Table or Equipment not found'], 404);
         }
