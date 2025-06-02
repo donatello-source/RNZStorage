@@ -45,7 +45,9 @@ class CategoryServiceTest extends TestCase
         $this->entityManagerMock
             ->expects($this->once())
             ->method('persist')
-            ->with($this->isInstanceOf(Category::class));
+            ->with($this->callback(function ($category) use ($nazwa) {
+                return $category instanceof Category && $category->getNazwa() === $nazwa;
+            }));
 
         $this->entityManagerMock
             ->expects($this->once())
@@ -86,6 +88,7 @@ class CategoryServiceTest extends TestCase
             ->willReturn(null);
 
         $this->expectException(NotFoundHttpException::class);
+        $this->expectExceptionMessage('Kategoria nie została znaleziona');
         $this->categoryService->delete(999);
     }
 }
