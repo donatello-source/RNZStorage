@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Quote;
 use App\Service\QuoteDateService;
+use Doctrine\ORM\EntityManagerInterface;
 use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -13,7 +14,10 @@ use Symfony\Component\Routing\Annotation\Route;
 #[Route('/api/quote-date')]
 class QuoteDateController extends AbstractController
 {
-    public function __construct(private readonly QuoteDateService $service) {}
+    public function __construct(
+        private readonly QuoteDateService $service,
+        private readonly EntityManagerInterface $em
+    ) {}
 
     #[Route('/create', name: 'quote_date_create', methods: ['POST'])]
     #[OA\Post(
@@ -40,7 +44,7 @@ class QuoteDateController extends AbstractController
     public function create(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
-        $quote = $this->getDoctrine()->getRepository(Quote::class)->find($data['quote_id']);
+        $quote = $this->em->getRepository(Quote::class)->find($data['quote_id']);
         if (!$quote) {
             return $this->json(['error' => 'Quote not found'], 404);
         }
