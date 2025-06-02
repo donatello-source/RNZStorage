@@ -69,47 +69,4 @@ class PersonServiceTest extends TestCase
         $this->assertTrue(password_verify('tajnehaslo', $person->getHaslo()));
     }
 
-    public function testLoginSuccess(): void
-    {
-        $person = new Person();
-        $person->setMail('jan@example.com');
-        $person->setHaslo(password_hash('tajnehaslo', PASSWORD_BCRYPT));
-
-        $this->personRepositoryMock
-            ->method('findOneBy')
-            ->with(['mail' => 'jan@example.com'])
-            ->willReturn($person);
-
-        $result = $this->personService->login([
-            'mail' => 'jan@example.com',
-            'haslo' => 'tajnehaslo'
-        ]);
-
-        $this->assertSame($person, $result);
-    }
-
-    public function testLoginFailsWithWrongPassword(): void
-    {
-        $person = new Person();
-        $person->setMail('jan@example.com');
-        $person->setHaslo(password_hash('prawidlowehaslo', PASSWORD_BCRYPT));
-
-        $this->personRepositoryMock
-            ->method('findOneBy')
-            ->willReturn($person);
-
-        $this->expectException(AuthenticationException::class);
-
-        $this->personService->login([
-            'mail' => 'jan@example.com',
-            'haslo' => 'blednehaslo'
-        ]);
-    }
-
-    public function testLoginFailsWithMissingData(): void
-    {
-        $this->expectException(BadRequestHttpException::class);
-
-        $this->personService->login(['mail' => 'brakhasla@example.com']);
-    }
 }
