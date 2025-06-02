@@ -81,7 +81,7 @@ readonly class UploadService
         return [
             'status' => $upload->getStatus(),
             'progress' => method_exists($upload, 'getProgress') ? $upload->getProgress() : null,
-            'error' => $upload->getError(),
+            'error' => $upload->getErrorMessage(),
         ];
     }
 
