@@ -11,22 +11,24 @@ import '../style/HomePage.css';
 const HomePage = () => {
   const [equipments, setEquipments] = useState([]);
   const [user, setUser] = useState(null);
-  const navigate = useNavigate();
+  const [categories, setCategories] = useState([]);
   const [isAdding, setIsAdding] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [selectedEquipment, setSelectedEquipment] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
-    
- useEffect(() => {
+  useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem('user'));
-  
+
     if (!storedUser) {
       navigate('/');
     } else if (storedUser.role.includes('ROLE_ADMIN')) {
       navigate('/admin');
     }
   }, [navigate]);
-  
+
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
@@ -54,6 +56,18 @@ const HomePage = () => {
     }
   }, [navigate]);
 
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch('/api/category');
+        const data = await response.json();
+        setCategories(data);
+      } catch (error) {
+        console.error('Błąd pobierania kategorii:', error);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   const handleLogout = async () => {
     localStorage.removeItem('user');
@@ -62,18 +76,18 @@ const HomePage = () => {
   };
 
   const refreshEquipment = async () => {
-  setIsLoading(true);
-  try {
-    const response = await fetch('/api/equipment', {
-      credentials: 'include'
-    });
-    const data = await response.json();
-    setEquipments(data);
-  } catch (error) {
-    console.error('Błąd podczas pobierania danych:', error);
-  } finally {
-    setIsLoading(false);
-  }
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/equipment', {
+        credentials: 'include'
+      });
+      const data = await response.json();
+      setEquipments(data);
+    } catch (error) {
+      console.error('Błąd podczas pobierania danych:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleAddClick = () => {
@@ -84,9 +98,9 @@ const HomePage = () => {
   return (
     <div className="home-container">
       <Header />
-      <Box className="home-content">
+      <Box className="home-content" sx={{ display: 'flex', minHeight: '100vh' }}>
         <NavMenu />
-        <Box className="main-content">
+        <Box className="main-content" sx={{ flex: 1, padding: 3 }}>
           <Box className="welcome-header">
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               <Typography variant="h4" className="welcome-text">
@@ -112,7 +126,13 @@ const HomePage = () => {
               <Grid container spacing={3} className="equipment-grid">
                 {equipments.map((equipment) => (
                   <Grid item xs={12} sm={6} md={4} key={equipment.id}>
-                    <EquipmentCard equipment={equipment} />
+                    <EquipmentCard
+                      equipment={equipment}
+                      onClick={() => {
+                        setSelectedEquipment(equipment);
+                        setEditModalOpen(true);
+                      }}
+                    />
                   </Grid>
                 ))}
               </Grid>
@@ -134,6 +154,14 @@ const HomePage = () => {
             onClose={() => setAddModalOpen(false)}
             equipment={null}
             isAdding={true}
+            categories={categories}
+
+          />
+          <EquipmentModal
+            open={editModalOpen}
+            onClose={() => setEditModalOpen(false)}
+            equipment={selectedEquipment}
+            categories={categories}
           />
         </Box>
       </Box>

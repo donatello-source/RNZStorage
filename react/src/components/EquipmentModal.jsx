@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Box, TextField, Button, MenuItem } from '@mui/material';
 
-const EquipmentModal = ({ open, onClose, equipment, onSave }) => {
+const EquipmentModal = ({ open, onClose, equipment, categories = [] }) => {
   const [formData, setFormData] = useState({
     id: '',
     name: '',
@@ -13,36 +13,31 @@ const EquipmentModal = ({ open, onClose, equipment, onSave }) => {
     pricing_info: ''
   });
 
-  const [categories, setCategories] = useState([]);
-
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await fetch('/api/category');
-        const data = await response.json();
-        setCategories(data);
-      } catch (error) {
-        console.error('Błąd pobierania kategorii:', error);
-      }
-    };
-
-    fetchCategories();
-  }, []);
-
-  useEffect(() => {
-    if (equipment) {
+    if (equipment && categories.length > 0) {
       setFormData({
         id: equipment.id || '',
         name: equipment.name || '',
         description: equipment.description || '',
         quantity: equipment.quantity || '',
         price: equipment.price || '',
-        categoryid: equipment.categoryid || '',
+        categoryid: equipment.categoryid ? String(equipment.categoryid) : String(categories[0].id),
         additional_info: equipment.additional_info || '',
         pricing_info: equipment.pricing_info || ''
       });
+    } else if (!equipment && categories.length > 0) {
+      setFormData({
+        id: '',
+        name: '',
+        description: '',
+        quantity: '',
+        price: '',
+        categoryid: String(categories[0].id),
+        additional_info: '',
+        pricing_info: ''
+      });
     }
-  }, [equipment]);
+  }, [equipment, categories, open]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -94,7 +89,6 @@ const EquipmentModal = ({ open, onClose, equipment, onSave }) => {
           value={formData.categoryid}
           onChange={handleChange}
         >
-          <MenuItem value="">Brak</MenuItem>
           {categories.map((category) => (
             <MenuItem key={category.id} value={category.id}>
               {category.nazwa}
