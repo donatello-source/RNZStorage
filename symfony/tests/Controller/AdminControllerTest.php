@@ -3,14 +3,13 @@
 namespace App\Tests\Controller;
 
 use App\Entity\Person;
-use App\Tests\AuthenticatedWebTestCase;
+use App\Tests\AuthenticatedWebTestCaseAdmin;
 use Symfony\Component\HttpFoundation\Response;
 
-class AdminControllerTest extends AuthenticatedWebTestCase
+class AdminControllerTest extends AuthenticatedWebTestCaseAdmin
 {
     public function testListUsersAsAdmin(): void
     {
-        $this->setTestUserRoles(['ROLE_ADMIN']);
         $this->logInSession();
 
         $this->client->request('GET', '/api/admin/users');
@@ -22,8 +21,32 @@ class AdminControllerTest extends AuthenticatedWebTestCase
 
     public function testListUsersAsNonAdmin(): void
     {
-        $this->setTestUserRoles(['ROLE_USER']);
-        $this->logInSession();
+        $repo = $this->entityManager->getRepository(\App\Entity\Person::class);
+        $user = $repo->findOneBy(['mail' => 'user@example.com']);
+        if (!$user) {
+            $user = new \App\Entity\Person();
+            $user->setImie('user');
+            $user->setNazwisko('User');
+            $user->setMail('user@example.com');
+            $user->setStanowisko('user');
+            $user->setRoles(['ROLE_USER']);
+            $passwordHasher = self::getContainer()->get(\Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface::class);
+            $user->setHaslo($passwordHasher->hashPassword($user, 'testpassword'));
+            $this->entityManager->persist($user);
+            $this->entityManager->flush();
+        }
+
+        $this->client->request(
+            'POST',
+            '/api/person/login',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode([
+                'mail' => 'user@example.com',
+                'haslo' => 'testpassword'
+            ])
+        );
 
         $this->client->request('GET', '/api/admin/users');
         $this->assertResponseStatusCodeSame(Response::HTTP_FORBIDDEN);
@@ -31,7 +54,6 @@ class AdminControllerTest extends AuthenticatedWebTestCase
 
     public function testUpdateUserRolesAsAdmin(): void
     {
-        $this->setTestUserRoles(['ROLE_ADMIN']);
         $this->logInSession();
 
         $user = $this->createTestPerson('otheruser@example.com', 'password', ['ROLE_USER']);
@@ -52,15 +74,39 @@ class AdminControllerTest extends AuthenticatedWebTestCase
 
     public function testUpdateUserRolesAsNonAdmin(): void
     {
-        $this->setTestUserRoles(['ROLE_USER']);
-        $this->logInSession();
+        $repo = $this->entityManager->getRepository(\App\Entity\Person::class);
+        $user = $repo->findOneBy(['mail' => 'user@example.com']);
+        if (!$user) {
+            $user = new \App\Entity\Person();
+            $user->setImie('user');
+            $user->setNazwisko('User');
+            $user->setMail('user@example.com');
+            $user->setStanowisko('user');
+            $user->setRoles(['ROLE_USER']);
+            $passwordHasher = self::getContainer()->get(\Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface::class);
+            $user->setHaslo($passwordHasher->hashPassword($user, 'testpassword'));
+            $this->entityManager->persist($user);
+            $this->entityManager->flush();
+        }
 
-        $user = $this->createTestPerson('otheruser2@example.com', 'password', ['ROLE_USER']);
+        $this->client->request(
+            'POST',
+            '/api/person/login',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode([
+                'mail' => 'user@example.com',
+                'haslo' => 'testpassword'
+            ])
+        );
+
+        $otherUser = $this->createTestPerson('otheruser2@example.com', 'password', ['ROLE_USER']);
 
         $data = ['roles' => 'ROLE_ADMIN'];
         $this->client->request(
             'PUT',
-            '/api/admin/users/' . $user->getId() . '/roles',
+            '/api/admin/users/' . $otherUser->getId() . '/roles',
             [],
             [],
             ['CONTENT_TYPE' => 'application/json'],
@@ -71,7 +117,6 @@ class AdminControllerTest extends AuthenticatedWebTestCase
 
     public function testUpdateUserRolesWithInvalidRole(): void
     {
-        $this->setTestUserRoles(['ROLE_ADMIN']);
         $this->logInSession();
 
         $user = $this->createTestPerson('otheruser3@example.com', 'password', ['ROLE_USER']);
@@ -94,7 +139,6 @@ class AdminControllerTest extends AuthenticatedWebTestCase
 
     public function testUpdateUserRolesForNonExistingUser(): void
     {
-        $this->setTestUserRoles(['ROLE_ADMIN']);
         $this->logInSession();
 
         $data = ['roles' => 'ROLE_ADMIN'];
