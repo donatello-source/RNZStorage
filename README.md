@@ -79,21 +79,53 @@ Pozwala na kompleksową obsługę sprzętu, wycen oraz plików związanych z rea
 
 Projekt jest w pełni zautomatyzowany przy użyciu **Docker Compose**.
 
-1. **Wymagania:**  
-   - Docker  
-   - Docker Compose
+### 1. Wymagania:
+- Docker  
+- Docker Compose
 
-2. **Uruchomienie projektu:**  
-   W głównym katalogu projektu uruchom:
-   ```
-   docker-compose up -d --build
-   ```
-   Po chwili wszystkie usługi (backend, frontend, baza, RabbitMQ, nginx) będą dostępne.
+### 2. Uruchomienie projektu:
+W głównym katalogu projektu uruchom:
+```bash
+docker-compose up -d --build
+```
 
-3. **Dostęp do aplikacji:**  
-   - Frontend: [http://localhost:5173](http://localhost:5173)
-   - Backend/API: [http://localhost:8080](http://localhost:8080)
-   - RabbitMQ panel: [http://localhost:15672](http://localhost:15672) (login: guest/guest)
+### 3. Konfiguracja Symfony:
+Po uruchomieniu kontenerów wykonaj następujące kroki:
+
+1. Utwórz plik `.env` w folderze głównym Symfony i dodaj do niego poniższą konfigurację:
+   ```env
+   APP_ENV=dev
+   DATABASE_URL="pgsql://symfony:symfony@db:5432/symfony"
+   DATABASE_NAME="symfony"
+   DATABASE_USER="symfony"
+   DATABASE_PASSWORD="symfony"
+   CORS_ALLOW_ORIGIN='^https?://(localhost|127\.0\.0\.1)(:[0-9]+)?$'
+   MESSENGER_TRANSPORT_DSN=amqp://guest:guest@rabbitmq:5672/%2f/messages
+   ```
+
+2. Wejdź do kontenera Symfony:
+   ```bash
+   docker exec -it symfony_php bash
+   ```
+
+3. Ustaw odpowiednie uprawnienia:
+   ```bash
+   chmod -R 777 var
+   chmod -R 777 tmp
+   ```
+
+4. Wejdź na stronę aplikacji, utwórz konto administratora, połącz się z bazą danych i edytuj uprawnienia tego konta na `ROLE_ADMIN`.  
+   Po zalogowaniu na konto administratora możesz dodawać nowych użytkowników i edytować ich role.
+
+5. W kontenerze Symfony uruchom workera:
+   ```bash
+   php bin/console messenger:consume async
+   ```
+
+### 4. Dostęp do aplikacji:
+- Frontend: [http://localhost:5173](http://localhost:5173)
+- Backend/API: [http://localhost:8080](http://localhost:8080)
+- RabbitMQ panel: [http://localhost:15672](http://localhost:15672) (login: guest/guest)
 
 ---
 
