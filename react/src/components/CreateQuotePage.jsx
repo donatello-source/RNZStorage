@@ -135,13 +135,12 @@ const CreateQuotePage = () => {
     0
   );
 
-  const netTotalAfterDiscount = netTotal * (1 - globalDiscount / 100);
 
   return (
-    <div className="create-quote-container">
-      <Header minimized />
-      <Box sx={{ display: 'flex' }}>
-        <NavMenu minimized />
+    <div className="create-quote-container" sx={{ height: '100vh', overflow: 'hidden' }}>
+      <Header />
+      <Box sx={{ display: 'flex', overflow: 'hidden' }}>
+        <NavMenu />
         <Box
           sx={{
             flex: 1,
@@ -161,6 +160,8 @@ const CreateQuotePage = () => {
               p: 4,
               borderRadius: 3,
               minHeight: 400,
+              maxHeight: '75vh',
+              overflowY: 'auto',
             }}
           >
             <form onSubmit={handleSubmit}>

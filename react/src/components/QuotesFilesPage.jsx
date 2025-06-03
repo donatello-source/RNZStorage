@@ -196,9 +196,9 @@ const QuotesFilesPage = () => {
   return (
     <div className="home-container">
       <Header />
-      <Box className="home-content" sx={{ display: 'flex' }}>
+      <Box className="home-content" sx={{ display: 'flex', overflow: 'hidden', height: '100vh' }}>
         <NavMenu />
-        <Box className="main-content" sx={{ flex: 1, padding: 3 }}>
+        <Box className="main-content" sx={{ flex: 1, padding: 3, maxHeight: '100vh', overflowY: 'auto' }}>
           <Typography variant="h4" gutterBottom>
             Wyceny - Foldery
           </Typography>
