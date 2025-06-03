@@ -19,15 +19,7 @@ const HomePage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem('user'));
 
-    if (!storedUser) {
-      navigate('/');
-    } else if (storedUser.role.includes('ROLE_ADMIN')) {
-      navigate('/admin');
-    }
-  }, [navigate]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -69,11 +61,7 @@ const HomePage = () => {
     fetchCategories();
   }, []);
 
-  const handleLogout = async () => {
-    localStorage.removeItem('user');
-    document.cookie = 'PHPSESSID=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-    navigate('/');
-  };
+
 
   const refreshEquipment = async () => {
     setIsLoading(true);
@@ -114,9 +102,7 @@ const HomePage = () => {
                 Odśwież
               </Button>
             </Box>
-            <Button className="logout-button" variant="contained" onClick={handleLogout}>
-              Wyloguj się
-            </Button>
+
           </Box>
             {isLoading ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', my: 5 }}>

@@ -16,7 +16,15 @@ function AdminPanel() {
     document.cookie = 'PHPSESSID=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
     navigate('/');
   };
-  
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem('user'));
+
+    if (!storedUser) {
+      navigate('/');
+    } else if (storedUser.role.includes('ROLE_ADMIN')) {
+      navigate('/admin');
+    }
+  }, [navigate]);
   useEffect(() => {
     fetch('/api/admin/users', {
       method: 'GET',
@@ -33,6 +41,7 @@ function AdminPanel() {
         setLoading(false);
       });
   }, [navigate]);
+
 
   const handleRoleChange = (userId, newRoles) => {
     fetch(`/api/admin/users/${userId}/roles`, {
